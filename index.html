@@ -222,10 +222,7 @@ function saveNote(categoryId,itemId,inputEl){
 }
 
 window.addNewItem = function addNewItem(){
-  if(!isAdmin()){
-    alert("Samo Teo i Anamarija mogu dodavati artikle.");
-    return;
-  }
+
   const input = document.getElementById("newItemInput");
   const name = input.value.trim();
   if(!name) return;
