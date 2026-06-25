@@ -525,19 +525,47 @@ function buildItemRow(cat,itemId){
 function renderOrder(){
   const wrap=document.getElementById("orderView"); wrap.innerHTML="";
   const {urgent,need}=getProblems();
-  const all=[...urgent.map(x=>({...x, statusLabel:"HITNO"})), ...need.map(x=>({...x, statusLabel:"TREBA"}))];
+  let all=[...urgent.map(x=>({...x, statusLabel:"HITNO"})), ...need.map(x=>({...x, statusLabel:"TREBA"}))];
+
+  const q=(window.currentOrderSearch || "").trim().toLowerCase();
+  if(q){
+    all = all.filter(x =>
+      (x.itemName || "").toLowerCase().includes(q) ||
+      (x.note || "").toLowerCase().includes(q) ||
+      (x.supplier || "").toLowerCase().includes(q) ||
+      (x.categories || "").toLowerCase().includes(q)
+    );
+  }
 
   const clearBox=document.createElement("div");
   clearBox.className="problem-card";
   clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Narudzba je grupirana po dobavljacu. Kuhinja moze staviti TREBA/HITNO, a dobavljac se moze odabrati kasnije.</div>`;
   const clearBtn=document.createElement("button"); clearBtn.className="danger"; clearBtn.textContent="✅ OBRISI CIJELU NARUDZBU"; clearBtn.onclick=clearOrder;
   clearBox.appendChild(document.createElement("br")); clearBox.appendChild(clearBtn); wrap.appendChild(clearBox);
-  renderSupplierAdminBox(wrap);
+
+  const orderSearch=document.createElement("input");
+  orderSearch.className="search";
+  orderSearch.id="orderSearchInput";
+  orderSearch.placeholder="🔍 Pretrazi narudzbu...";
+  orderSearch.value=window.currentOrderSearch || "";
+  orderSearch.oninput=()=>{
+    window.currentOrderSearch=orderSearch.value;
+    const cursorPos = orderSearch.selectionStart || orderSearch.value.length;
+    renderOrder();
+    setTimeout(()=>{
+      const el=document.getElementById("orderSearchInput");
+      if(el){
+        el.focus();
+        el.setSelectionRange(cursorPos,cursorPos);
+      }
+    },0);
+  };
+  wrap.appendChild(orderSearch);
 
   if(!all.length){
     const empty=document.createElement("div");
     empty.className="problem-card";
-    empty.innerHTML='<div class="meta">Nema artikala u narudzbi.</div>';
+    empty.innerHTML='<div class="meta">Nema artikala u narudzbi ili nema rezultata za pretragu.</div>';
     wrap.appendChild(empty);
     return;
   }
