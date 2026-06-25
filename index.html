@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Mlinski Kamen - Nabava v3 Production</title>
+<title>Mlinski Kamen - Nabava v3.16 Otpis Povijest</title>
 <style>
 :root{
   --bg:#101010;--card:#1b1b1b;--card2:#242424;--text:#fff;--muted:#aaa;--line:#333;
@@ -58,11 +58,33 @@ button:active{transform:scale(.98)}
 .history-line:first-child{border-top:0}
 .footer-note{color:var(--muted);font-size:12px;margin-top:12px;text-align:center}
 .badge{display:inline-block;background:#333;border:1px solid #555;color:#ddd;border-radius:999px;padding:3px 8px;font-size:12px;margin:3px 4px 0 0}
+.supplier-badge{display:inline-block;background:#2f2f2f;border:1px solid #555;color:#eee;border-radius:999px;padding:3px 8px;font-size:12px;margin-top:5px}
+.supplier-row{display:none;grid-column:1/-1;gap:8px;margin-top:8px;grid-template-columns:1fr auto}
+.item.open .supplier-row{display:grid}
+.supplier-select{background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:12px;width:100%}
+.copy-btn{background:var(--blue);padding:9px 11px;border-radius:10px;font-size:13px}
+.supplier-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+.supplier-title{font-size:21px;font-weight:900;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.supplier-admin{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.supplier-admin button{font-size:13px;padding:9px 11px;border-radius:10px}
 @media(max-width:650px){
   body{padding:10px}h1{font-size:23px}.item{grid-template-columns:1fr}.state{width:100%}
   .action-row{grid-template-columns:1fr}.note-row{grid-template-columns:1fr}.addbar{grid-template-columns:1fr}
   .user-grid{grid-template-columns:1fr}.status{align-items:flex-start;flex-direction:column}
 }
+
+.analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.analytics-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
+.analytics-card h3{margin:0 0 8px;font-size:20px}
+.analytics-line{border-top:1px solid var(--line);padding:8px 0;font-size:14px;color:#ddd}
+.analytics-line:first-of-type{border-top:0}
+.waste-form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+.waste-grid{display:grid;grid-template-columns:1.2fr .7fr 1fr auto;gap:8px}
+.waste-grid input,.waste-grid select{background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:12px;width:100%}
+.waste-line{padding:10px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.waste-line:first-of-type{border-top:0}
+@media(max-width:650px){.analytics-grid{grid-template-columns:1fr}.waste-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -78,7 +100,7 @@ button:active{transform:scale(.98)}
 
 <div id="app" class="hidden">
 <div class="status">
-<div><b>Prijavljen:</b> <span id="currentUser"></span><br><span class="meta">Isti artikl moze biti u vise skladista. Status je zajednicki.</span></div>
+<div><b>Prijavljen:</b> <span id="currentUser"></span><br><span class="meta">Status je IMA/TREBA/HITNO. Dobavljac se bira u narudzbi.</span></div>
 <button class="mutedBtn" onclick="logoutUser()">Promijeni korisnika</button>
 </div>
 <div class="topbar" id="topbar"></div>
@@ -93,7 +115,9 @@ button:active{transform:scale(.98)}
 </div>
 <div id="orderView" class="hidden"></div>
 <div id="historyView" class="hidden"><div class="history" id="history"></div></div>
-<div class="footer-note">Production verzija. Koristi nabava_v3.</div>
+<div id="analyticsView" class="hidden"></div>
+<div id="wasteView" class="hidden"></div>
+<div class="footer-note">Production verzija. Otpis vide i unose svi. Brisanje otpisa samo Teo/Anamarija.</div>
 </div>
 </div>
 
@@ -125,9 +149,14 @@ const categoriesRef = ref(db, "nabava_v3/categories");
 const stateRef = ref(db, "nabava_v3/state");
 const historyRef = ref(db, "nabava_v3/history");
 const metaRef = ref(db, "nabava_v3/meta");
+const wasteRef = ref(db, "nabava_v3/waste");
+const wasteHistoryRef = ref(db, "nabava_v3/waste_history");
+const suppliersRef = ref(db, "nabava_v3/suppliers");
 
 const users = ["Marica","Sanjar","Nina","Ana","Kuhinja","Anamarija","Teo"];
 const admins = ["Teo","Anamarija"];
+const defaultSuppliers = ["Nedodijeljeno","Metro","Interalpha","Sale Nero","Ana","Ostalo"];
+let suppliers = [...defaultSuppliers];
 
 const defaultOldCategories = [
  {id:"meso",name:"🥩 Meso",items:["Teletina","Svinjski vrat","Carsko","Piletina","Cevapi","Kebab","Spek tabla","Sunka za zagrebacki"]},
@@ -146,6 +175,8 @@ let items = {};
 let categories = [];
 let state = {};
 let history = [];
+let waste = [];
+let wasteHistory = [];
 let oldCategoriesLoaded = false;
 let oldStateLoaded = false;
 let oldCategoriesData = null;
@@ -178,6 +209,29 @@ function formatShort(ts){ if(!ts)return""; return new Date(ts).toLocaleString("h
 function getCategoryName(id){ return categories.find(c=>c.id===id)?.name || id; }
 function itemState(itemId){ return state[itemId]?.status || "ok"; }
 function itemNote(itemId){ return state[itemId]?.note || ""; }
+function itemSupplier(itemId){ return state[itemId]?.supplier || "Nedodijeljeno"; }
+function setItemSupplier(itemId, supplier){
+  const current = state[itemId] || {status:"ok", note:"", changedBy:"", changedAt:0};
+  state[itemId] = {
+    ...current,
+    supplier: supplier || "Nedodijeljeno",
+    supplierChangedBy: currentUser,
+    supplierChangedAt: Date.now()
+  };
+  pushHistory({
+    time:Date.now(),
+    user:currentUser,
+    categoryId:"supplier",
+    itemId,
+    itemName:getItemName(itemId),
+    oldStatus:current.status || "ok",
+    newStatus:current.status || "ok",
+    oldNote:current.note || "",
+    note:(current.note || "") + " | Dobavljac: " + (supplier || "Nedodijeljeno")
+  });
+  set(stateRef, state);
+  renderAll();
+}
 function saveAll(){ set(itemsRef, items); set(categoriesRef, categories); }
 function pushHistory(entry){ push(historyRef, entry); }
 
@@ -213,7 +267,13 @@ function setItemState(categoryId,itemId,newStatus,noteValue=null){
   const oldNote = state[itemId]?.note || "";
   const note = noteValue !== null ? noteValue : (newStatus === "ok" ? "" : oldNote);
   const entryTime = Date.now();
-  state[itemId] = { status:newStatus, note, changedBy:currentUser, changedAt:entryTime };
+  state[itemId] = {
+    status:newStatus,
+    note,
+    changedBy:currentUser,
+    changedAt:entryTime,
+    supplier: state[itemId]?.supplier || "Nedodijeljeno"
+  };
   pushHistory({time:entryTime,user:currentUser,categoryId,itemId,itemName:getItemName(itemId),oldStatus,newStatus,oldNote,note});
   set(stateRef, state);
 }
@@ -239,7 +299,7 @@ window.addNewItem = function addNewItem(){
     if(chosen.includes(cat.id)) cat.items.push(itemId);
   });
 
-  if(!state[itemId]) state[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0};
+  if(!state[itemId]) state[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0, supplier:"Nedodijeljeno"};
 
   input.value = "";
   saveAll();
@@ -285,6 +345,8 @@ window.setView=function(view){
   document.getElementById("itemsView").classList.toggle("hidden",view!=="items");
   document.getElementById("orderView").classList.toggle("hidden",view!=="order");
   document.getElementById("historyView").classList.toggle("hidden",view!=="history");
+  document.getElementById("analyticsView").classList.toggle("hidden",view!=="analytics");
+  document.getElementById("wasteView").classList.toggle("hidden",view!=="waste");
   renderAll();
 }
 
@@ -298,7 +360,8 @@ function getProblems(){
       note: itemNote(itemId),
       changedBy: state[itemId]?.changedBy || "",
       changedAt: state[itemId]?.changedAt || 0,
-      categories: categories.filter(c=>(c.items||[]).includes(itemId)).map(c=>c.name).join(", ")
+      categories: categories.filter(c=>(c.items||[]).includes(itemId)).map(c=>c.name).join(", "),
+      supplier: itemSupplier(itemId)
     };
     if(s==="urgent") urgent.push(entry);
     if(s==="need") need.push(entry);
@@ -322,7 +385,19 @@ function renderTopbar(){
   orderBtn.onclick=()=>setView("order");
   tb.appendChild(orderBtn);
 
+  const wasteBtn=document.createElement("button");
+  wasteBtn.className=currentView==="waste"?"primary":"mutedBtn";
+  wasteBtn.textContent="📉 Otpis";
+  wasteBtn.onclick=()=>setView("waste");
+  tb.appendChild(wasteBtn);
+
   if(isAdmin()){
+    const analyticsBtn=document.createElement("button");
+    analyticsBtn.className=currentView==="analytics"?"primary":"mutedBtn";
+    analyticsBtn.textContent="📊 Statistika";
+    analyticsBtn.onclick=()=>setView("analytics");
+    tb.appendChild(analyticsBtn);
+
     const historyBtn=document.createElement("button");
     historyBtn.className=currentView==="history"?"primary":"mutedBtn";
     historyBtn.textContent="📜 Povijest";
@@ -334,6 +409,12 @@ function renderTopbar(){
     addCat.textContent="+ Skladiste";
     addCat.onclick=addCategory;
     tb.appendChild(addCat);
+
+    const addSupplierBtn=document.createElement("button");
+    addSupplierBtn.className="purple";
+    addSupplierBtn.textContent="+ Dobavljac";
+    addSupplierBtn.onclick=addSupplier;
+    tb.appendChild(addSupplierBtn);
   }
 }
 function renderTabs(){
@@ -393,6 +474,7 @@ function buildItemRow(cat,itemId){
   const left=document.createElement("div");
   left.innerHTML=`<div class="item-name">${getItemName(itemId)}</div>
     <div class="meta">${changedBy?`Oznacio: ${changedBy} • ${formatShort(changedAt)}`:"Nije oznaceno"}${isAdmin()?`<br>📍 ${places}`:""}</div>
+    <div class="supplier-badge">🚚 ${itemSupplier(itemId)}</div>
     ${note?`<div class="note">📝 ${note}</div>`:""}`;
 
   const statusBtn=document.createElement("button");
@@ -411,7 +493,20 @@ function buildItemRow(cat,itemId){
   const saveBtn=document.createElement("button"); saveBtn.className="primary"; saveBtn.textContent="Spremi biljesku"; saveBtn.onclick=()=>saveNote(cat.id,itemId,input);
   noteRow.append(input,saveBtn);
 
-  row.append(left,statusBtn,actions,noteRow);
+  const supplierRow=document.createElement("div"); supplierRow.className="supplier-row";
+  const supplierSelect=document.createElement("select"); supplierSelect.className="supplier-select";
+  suppliers.forEach(sup=>{
+    const opt=document.createElement("option");
+    opt.value=sup;
+    opt.textContent=sup;
+    if(itemSupplier(itemId)===sup) opt.selected=true;
+    supplierSelect.appendChild(opt);
+  });
+  const supplierBtn=document.createElement("button"); supplierBtn.className="primary"; supplierBtn.textContent="Spremi dobavljaca";
+  supplierBtn.onclick=()=>setItemSupplier(itemId,supplierSelect.value);
+  supplierRow.append(supplierSelect,supplierBtn);
+
+  row.append(left,statusBtn,actions,noteRow,supplierRow);
 
   if(isAdmin()){
     const adm=document.createElement("div"); adm.className="admin-actions";
@@ -430,28 +525,104 @@ function buildItemRow(cat,itemId){
 function renderOrder(){
   const wrap=document.getElementById("orderView"); wrap.innerHTML="";
   const {urgent,need}=getProblems();
+  const all=[...urgent.map(x=>({...x, statusLabel:"HITNO"})), ...need.map(x=>({...x, statusLabel:"TREBA"}))];
 
   const clearBox=document.createElement("div");
   clearBox.className="problem-card";
-  clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Ovim gumbom vracas sve artikle iz narudzbe na IMA i brises biljeske.</div>`;
+  clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Narudzba je grupirana po dobavljacu. Kuhinja moze staviti TREBA/HITNO, a dobavljac se moze odabrati kasnije.</div>`;
   const clearBtn=document.createElement("button"); clearBtn.className="danger"; clearBtn.textContent="✅ OBRISI CIJELU NARUDZBU"; clearBtn.onclick=clearOrder;
   clearBox.appendChild(document.createElement("br")); clearBox.appendChild(clearBtn); wrap.appendChild(clearBox);
+  renderSupplierAdminBox(wrap);
 
-  function card(title,arr){
-    const c=document.createElement("div"); c.className="problem-card";
-    const t=document.createElement("div"); t.className="problem-title"; t.textContent=`${title} (${arr.length})`; c.appendChild(t);
-    if(!arr.length){ const empty=document.createElement("div"); empty.className="meta"; empty.textContent="Nema artikala."; c.appendChild(empty); }
+  if(!all.length){
+    const empty=document.createElement("div");
+    empty.className="problem-card";
+    empty.innerHTML='<div class="meta">Nema artikala u narudzbi.</div>';
+    wrap.appendChild(empty);
+    return;
+  }
+
+  const grouped = {};
+  all.forEach(x=>{
+    const sup = x.supplier || "Nedodijeljeno";
+    if(!grouped[sup]) grouped[sup]=[];
+    grouped[sup].push(x);
+  });
+
+  const supplierOrder = ["Nedodijeljeno", ...suppliers.filter(s=>s!=="Nedodijeljeno")];
+  supplierOrder.forEach(sup=>{
+    const arr = grouped[sup] || [];
+    if(!arr.length) return;
+
+    const card=document.createElement("div");
+    card.className="supplier-card";
+
+    const title=document.createElement("div");
+    title.className="supplier-title";
+    title.innerHTML=`<span>📦 ${sup} (${arr.length})</span>`;
+
+    const copy=document.createElement("button");
+    copy.className="copy-btn";
+    copy.textContent="KOPIRAJ";
+    copy.onclick=()=>copySupplierOrder(sup,arr);
+    title.appendChild(copy);
+    card.appendChild(title);
+
     arr.forEach(x=>{
       const line=document.createElement("div"); line.className="problem-line";
-      line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.categories} • ${x.changedBy||""} ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
-      const btn=document.createElement("button"); btn.className="green"; btn.textContent="IMA"; btn.onclick=()=>{if(confirm(`Vratiti "${x.itemName}" na IMA?`)) setItemState("order",x.itemId,"ok")};
-      line.appendChild(btn); c.appendChild(line);
+      const statusIcon = x.statusLabel==="HITNO" ? "🔴 HITNO" : "🟡 TREBA";
+      line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${statusIcon} • ${x.categories} • ${x.changedBy||""} ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
+
+      const right=document.createElement("div");
+      right.style.display="flex";
+      right.style.gap="6px";
+      right.style.flexWrap="wrap";
+      right.style.justifyContent="flex-end";
+
+      const select=document.createElement("select");
+      select.className="supplier-select";
+      select.style.maxWidth="150px";
+      suppliers.forEach(s=>{
+        const opt=document.createElement("option");
+        opt.value=s;
+        opt.textContent=s;
+        if((x.supplier||"Nedodijeljeno")===s) opt.selected=true;
+        select.appendChild(opt);
+      });
+      select.onchange=()=>setItemSupplier(x.itemId,select.value);
+
+      const ima=document.createElement("button");
+      ima.className="green";
+      ima.textContent="IMA";
+      ima.onclick=()=>{if(confirm(`Vratiti "${x.itemName}" na IMA?`)) setItemState("order",x.itemId,"ok")};
+
+      right.append(select,ima);
+      line.appendChild(right);
+      card.appendChild(line);
     });
-    return c;
-  }
-  wrap.appendChild(card("🔴 HITNO",urgent));
-  wrap.appendChild(card("🟡 TREBA",need));
+
+    wrap.appendChild(card);
+  });
 }
+
+async function copySupplierOrder(supplierName, arr){
+  const lines = [];
+  lines.push(supplierName.toUpperCase());
+  lines.push("");
+  arr.forEach(x=>{
+    const note = x.note ? " (" + x.note + ")" : "";
+    lines.push("- " + x.itemName + note);
+  });
+  const text = lines.join("\n");
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Kopirano: " + supplierName);
+  }catch(e){
+    prompt("Kopiraj narudzbu:", text);
+  }
+}
+
 function clearOrder(){
   const {urgent,need}=getProblems();
   const all=[...urgent,...need];
@@ -461,7 +632,7 @@ function clearOrder(){
   all.forEach(x=>{
     const oldStatus=state[x.itemId]?.status||"ok";
     const oldNote=state[x.itemId]?.note||"";
-    state[x.itemId]={status:"ok",note:"",changedBy:currentUser,changedAt:Date.now()};
+    state[x.itemId]={status:"ok",note:"",changedBy:currentUser,changedAt:Date.now(),supplier:"Nedodijeljeno"};
     pushHistory({time:Date.now(),user:currentUser,categoryId:"order",itemId:x.itemId,itemName:x.itemName,oldStatus,newStatus:"ok",oldNote,note:""});
   });
   set(stateRef,state);
@@ -479,6 +650,240 @@ function renderHistory(){
     wrap.appendChild(line);
   });
 }
+
+
+// DOBAVLJACI
+function saveSuppliers(){
+  if(!suppliers.includes("Nedodijeljeno")) suppliers.unshift("Nedodijeljeno");
+  suppliers = [...new Set(suppliers.map(s=>String(s).trim()).filter(Boolean))];
+  set(suppliersRef, suppliers);
+}
+
+function addSupplier(){
+  if(!isAdmin()) return;
+  const name = prompt("Naziv novog dobavljaca:");
+  if(!name) return;
+  const clean = name.trim();
+  if(!clean) return;
+  if(suppliers.some(s=>s.toLowerCase()===clean.toLowerCase())){
+    alert("Taj dobavljac vec postoji.");
+    return;
+  }
+  suppliers.push(clean);
+  saveSuppliers();
+}
+
+function renderSupplierAdminBox(container){
+  if(!isAdmin()) return;
+  const box=document.createElement("div");
+  box.className="supplier-admin";
+
+  suppliers.forEach(s=>{
+    if(s==="Nedodijeljeno") return;
+    const rename=document.createElement("button");
+    rename.className="primary";
+    rename.textContent="✏️ " + s;
+    rename.onclick=()=>renameSupplier(s);
+
+    const del=document.createElement("button");
+    del.className="danger";
+    del.textContent="🗑️ " + s;
+    del.onclick=()=>deleteSupplier(s);
+
+    box.append(rename,del);
+  });
+
+  container.appendChild(box);
+}
+
+
+
+function renderAnalytics(){
+  const wrap=document.getElementById("analyticsView"); 
+  if(!wrap) return;
+  wrap.innerHTML="";
+
+  const allItems = Object.keys(items || {});
+  const needItems = allItems.filter(id=>itemState(id)==="need");
+  const urgentItems = allItems.filter(id=>itemState(id)==="urgent");
+  const okItems = allItems.filter(id=>itemState(id)==="ok");
+
+  const orderByChanged = [...needItems, ...urgentItems].map(id=>({
+    id,
+    name:getItemName(id),
+    status:itemState(id),
+    changedAt:state[id]?.changedAt || 0,
+    changedBy:state[id]?.changedBy || "",
+    supplier:itemSupplier ? itemSupplier(id) : (state[id]?.supplier || "Nedodijeljeno")
+  }));
+
+  const byUser = {};
+  Object.values(history || {}).forEach(h=>{
+    if(!h || !h.user) return;
+    byUser[h.user]=(byUser[h.user]||0)+1;
+  });
+
+  const byItem = {};
+  Object.values(history || {}).forEach(h=>{
+    if(!h || !h.itemId) return;
+    if(h.newStatus==="need" || h.newStatus==="urgent"){
+      byItem[h.itemId]=(byItem[h.itemId]||0)+1;
+    }
+  });
+
+  const topItems = Object.entries(byItem)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,20)
+    .map(([id,count])=>({name:getItemName(id),count}));
+
+  const now = Date.now();
+  const staleAll = allItems.map(id=>{
+    const ts = state[id]?.changedAt || 0;
+    const days = ts ? Math.floor((now-ts)/(1000*60*60*24)) : 999;
+    return {id,name:getItemName(id),days,ts};
+  }).sort((a,b)=>b.days-a.days);
+
+  const stale14 = staleAll.filter(x=>x.days>=14 && x.days<30).slice(0,30);
+  const stale30 = staleAll.filter(x=>x.days>=30).slice(0,30);
+
+  const grid=document.createElement("div");
+  grid.className="analytics-grid";
+
+  function card(title, htmlContent){
+    const c=document.createElement("div");
+    c.className="analytics-card";
+    c.innerHTML=`<h3>${title}</h3>${htmlContent}`;
+    grid.appendChild(c);
+  }
+
+  card("📦 Trenutno stanje",
+    `<div class="analytics-line">Ukupno artikala: <b>${allItems.length}</b></div>
+     <div class="analytics-line">IMA: <b>${okItems.length}</b></div>
+     <div class="analytics-line">TREBA: <b>${needItems.length}</b></div>
+     <div class="analytics-line">HITNO: <b>${urgentItems.length}</b></div>`
+  );
+
+  card("👤 Aktivnost korisnika",
+    Object.entries(byUser).sort((a,b)=>b[1]-a[1]).slice(0,10)
+      .map(([u,c])=>`<div class="analytics-line">${u}: <b>${c}</b></div>`).join("") || '<div class="analytics-line">Nema podataka.</div>'
+  );
+
+  card("🔥 Najcesce narucivano",
+    topItems.map(x=>`<div class="analytics-line">${x.name}: <b>${x.count}</b></div>`).join("") || '<div class="analytics-line">Nema podataka.</div>'
+  );
+
+  card("🟡 Nije dirano 14-29 dana",
+    stale14.map(x=>`<div class="analytics-line">${x.name}: <b>${x.days} dana</b></div>`).join("") || '<div class="analytics-line">Nema takvih artikala.</div>'
+  );
+
+  card("🔴 Nije dirano 30+ dana",
+    stale30.map(x=>`<div class="analytics-line">${x.name}: <b>${x.days===999?"nikad":x.days+" dana"}</b></div>`).join("") || '<div class="analytics-line">Nema takvih artikala.</div>'
+  );
+
+  wrap.appendChild(grid);
+}
+
+function addWaste(){
+  const item = document.getElementById("wasteItem")?.value?.trim() || "";
+  const qty = document.getElementById("wasteQty")?.value?.trim() || "";
+  const reason = document.getElementById("wasteReason")?.value?.trim() || "";
+  if(!item){
+    alert("Upisi sto se otpisuje.");
+    return;
+  }
+  const entry = {
+    time: Date.now(),
+    user: currentUser,
+    item,
+    qty,
+    reason
+  };
+  push(wasteRef, entry);
+  push(wasteHistoryRef, {...entry, action:"DODANO"});
+  document.getElementById("wasteItem").value="";
+  document.getElementById("wasteQty").value="";
+  document.getElementById("wasteReason").value="";
+}
+
+function deleteWaste(id){
+  if(!isAdmin()) return;
+  const existing = waste.find(w=>w.id===id);
+  if(!confirm("Obrisati ovaj otpis?")) return;
+  if(existing){
+    push(wasteHistoryRef, {
+      time: Date.now(),
+      user: currentUser,
+      action:"OBRISANO",
+      originalTime: existing.time || 0,
+      originalUser: existing.user || "",
+      item: existing.item || "",
+      qty: existing.qty || "",
+      reason: existing.reason || ""
+    });
+  }
+  remove(ref(db, "nabava_v3/waste/" + id));
+}
+
+function renderWaste(){
+  const wrap=document.getElementById("wasteView");
+  if(!wrap) return;
+  wrap.innerHTML="";
+
+  const form=document.createElement("div");
+  form.className="waste-form";
+  form.innerHTML=`
+    <div class="problem-title">📉 Otpis</div>
+    <div class="meta">Otpis nije povezan s artiklima. Upisi sto je baceno, kolicinu i razlog.</div>
+    <div class="waste-grid" style="margin-top:10px">
+      <input id="wasteItem" placeholder="Sto se otpisuje? npr. Rajcica" />
+      <input id="wasteQty" placeholder="Kolicina npr. 3 kg" />
+      <input id="wasteReason" placeholder="Razlog npr. pokvareno" />
+      <button class="danger" onclick="addWaste()">+ Otpis</button>
+    </div>
+  `;
+  wrap.appendChild(form);
+
+  const card=document.createElement("div");
+  card.className="problem-card";
+  card.innerHTML='<div class="problem-title">Zadnji otpisi</div>';
+
+  if(!waste.length){
+    card.innerHTML += '<div class="meta">Jos nema otpisa.</div>';
+  } else {
+    waste.slice(0,100).forEach(w=>{
+      const line=document.createElement("div");
+      line.className="waste-line";
+      line.innerHTML=`<div><b>${w.item}</b><div class="meta">${formatShort(w.time)} • ${w.user||""}${w.qty? " • " + w.qty:""}</div>${w.reason?`<div class="note">📝 ${w.reason}</div>`:""}</div>`;
+      if(isAdmin()){
+        const del=document.createElement("button");
+        del.className="danger";
+        del.textContent="Obrisi";
+        del.onclick=()=>deleteWaste(w.id);
+        line.appendChild(del);
+      }
+      card.appendChild(line);
+    });
+  }
+  wrap.appendChild(card);
+
+  const hist=document.createElement("div");
+  hist.className="problem-card";
+  hist.innerHTML='<div class="problem-title">📜 Povijest otpisa</div>';
+
+  if(!wasteHistory.length){
+    hist.innerHTML += '<div class="meta">Jos nema povijesti otpisa.</div>';
+  } else {
+    wasteHistory.slice(0,100).forEach(w=>{
+      const line=document.createElement("div");
+      line.className="waste-line";
+      const actionIcon = w.action==="OBRISANO" ? "🗑️ OBRISANO" : "➕ DODANO";
+      line.innerHTML=`<div><b>${actionIcon}: ${w.item}</b><div class="meta">${formatShort(w.time)} • ${w.user||""}${w.qty? " • " + w.qty:""}</div>${w.reason?`<div class="note">📝 ${w.reason}</div>`:""}</div>`;
+      hist.appendChild(line);
+    });
+  }
+  wrap.appendChild(hist);
+}
+
 
 // ADMIN FUNKCIJE
 function renameItem(itemId){
@@ -565,6 +970,8 @@ function renderAll(){
   if(currentView==="items")renderItems();
   if(currentView==="order")renderOrder();
   if(currentView==="history")renderHistory();
+  if(currentView==="analytics")renderAnalytics();
+  if(currentView==="waste")renderWaste();
 }
 
 // FIREBASE LISTENERS
@@ -632,7 +1039,7 @@ window.importV2Manual = async function importV2Manual(){
         if(!itemIds.includes(itemId)) itemIds.push(itemId);
 
         if(!newState[itemId]){
-          newState[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0};
+          newState[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0, supplier:"Nedodijeljeno"};
         }
 
         const oldKey = catId + "__" + name;
@@ -643,7 +1050,8 @@ window.importV2Manual = async function importV2Manual(){
             status: old.status || "ok",
             note: old.note || "",
             changedBy: old.changedBy || "",
-            changedAt: old.changedAt || 0
+            changedAt: old.changedAt || 0,
+            supplier:"Nedodijeljeno"
           };
         }
       });
@@ -694,6 +1102,34 @@ window.importV2Manual = async function importV2Manual(){
   }
 };
 
+
+onValue(suppliersRef, snapshot=>{
+  const data=snapshot.val();
+  if(Array.isArray(data) && data.length){
+    suppliers=data;
+    if(!suppliers.includes("Nedodijeljeno")) suppliers.unshift("Nedodijeljeno");
+  } else {
+    suppliers=[...defaultSuppliers];
+    set(suppliersRef,suppliers);
+  }
+  renderAll();
+});
+
+
+onValue(wasteRef, snapshot=>{
+  const data=snapshot.val()||{};
+  waste=Object.entries(data).map(([id,x])=>({id,...x})).sort((a,b)=>(b.time||0)-(a.time||0));
+  renderAll();
+});
+
+
+onValue(wasteHistoryRef, snapshot=>{
+  const data=snapshot.val()||{};
+  wasteHistory=Object.entries(data).map(([id,x])=>({id,...x})).sort((a,b)=>(b.time||0)-(a.time||0));
+  renderAll();
+});
+
+window.addWaste=addWaste;
 window.renderAll=renderAll;
 renderUsers(); if(currentUser)showApp();
 </script>
