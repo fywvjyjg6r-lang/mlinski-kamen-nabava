@@ -90,7 +90,11 @@ button:active{transform:scale(.98)}
 .order-section-title.urgent{background:rgba(139,30,30,.55)}
 .order-section-title.need{background:rgba(154,122,24,.55)}
 .order-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.order-actions button{font-size:13px;padding:9px 10px;border-radius:10px}
+.order-actions button{
+  font-size:15px;
+  padding:12px 14px;
+  border-radius:12px;
+}
 
 </style>
 </head>
@@ -678,7 +682,11 @@ function renderOrder(){
         arrived.textContent="Vrati na stanje";
         arrived.onclick=()=>setItemState("order",x.itemId,"ok");
 
-        right.append(select,needBtn,urgentBtn,arrived);
+       if(x.statusLabel === "TREBA"){
+  right.append(select, urgentBtn, arrived);
+}else{
+  right.append(select, needBtn, arrived);
+}
         line.appendChild(right);
         card.appendChild(line);
       });
