@@ -1,0 +1,1250 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Mlinski Kamen - Nabava v3.16 Otpis Povijest</title>
+<style>
+:root{
+  --bg:#101010;--card:#1b1b1b;--card2:#242424;--text:#fff;--muted:#aaa;--line:#333;
+  --green:#2e7d32;--yellow:#9a7a18;--red:#8b1e1e;--blue:#235c8f;--purple:#5b3f8c
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px}
+.wrap{max-width:1050px;margin:0 auto}
+h1{margin:0;text-align:center;font-size:28px}
+.sub{text-align:center;color:var(--muted);margin:4px 0 14px}
+button,input{font:inherit}
+button{border:0;border-radius:14px;color:white;background:var(--card2);padding:12px 14px;font-weight:800;cursor:pointer}
+button:active{transform:scale(.98)}
+.primary{background:var(--blue)}.danger{background:var(--red)}.green{background:var(--green)}.yellow{background:var(--yellow)}.purple{background:var(--purple)}.mutedBtn{background:#3a3a3a}
+.hidden{display:none!important}
+.login{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center}
+.user-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.user-grid button{height:78px;font-size:21px}
+.status{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:#ddd;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.topbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.addbar{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px}
+.addbar input{background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
+.tabs button{white-space:nowrap;padding:10px 12px;background:#2b2b2b}
+.tabs button.active{background:var(--blue)}
+.search{width:100%;margin-bottom:12px;background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:17px}
+.category{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:14px}
+.cat-title{font-size:22px;font-weight:900;margin:0 0 10px;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.cat-actions{display:flex;gap:7px;flex-wrap:wrap}
+.cat-actions button{font-size:13px;padding:8px 10px;border-radius:10px}
+.item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border-top:1px solid var(--line);padding:12px 0}
+.item:first-of-type{border-top:0}
+.item-name{font-size:19px;font-weight:800}
+.meta{color:var(--muted);font-size:13px;margin-top:4px}
+.note{color:#e0e0e0;font-size:14px;margin-top:5px}
+.state{min-width:116px;text-align:center;border-radius:14px;padding:11px 10px;font-weight:900}
+.state.ok{background:var(--green)}.state.need{background:var(--yellow)}.state.urgent{background:var(--red)}
+.action-row{display:none;grid-column:1/-1;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.item.open .action-row{display:grid}
+.note-row{display:none;grid-column:1/-1;gap:8px;margin-top:8px;grid-template-columns:1fr auto}
+.item.open .note-row{display:grid}
+.note-input{background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:12px}
+.admin-actions{display:none;grid-column:1/-1;gap:7px;flex-wrap:wrap;margin-top:8px}
+.item.open .admin-actions{display:flex}
+.admin-actions button{padding:8px 10px;border-radius:10px;font-size:13px}
+.problem-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+.problem-title{font-size:22px;font-weight:900;margin-bottom:8px}
+.problem-line{padding:10px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.problem-line:first-of-type{border-top:0}
+.history{max-height:430px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px}
+.history-line{border-top:1px solid var(--line);padding:9px 0;color:#ddd;font-size:14px}
+.history-line:first-child{border-top:0}
+.footer-note{color:var(--muted);font-size:12px;margin-top:12px;text-align:center}
+.badge{display:inline-block;background:#333;border:1px solid #555;color:#ddd;border-radius:999px;padding:3px 8px;font-size:12px;margin:3px 4px 0 0}
+.supplier-badge{display:inline-block;background:#2f2f2f;border:1px solid #555;color:#eee;border-radius:999px;padding:3px 8px;font-size:12px;margin-top:5px}
+.supplier-row{display:none;grid-column:1/-1;gap:8px;margin-top:8px;grid-template-columns:1fr auto}
+.item.open .supplier-row{display:grid}
+.supplier-select{background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:12px;width:100%}
+.copy-btn{background:var(--blue);padding:9px 11px;border-radius:10px;font-size:13px}
+.supplier-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+.supplier-title{font-size:21px;font-weight:900;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.supplier-admin{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.supplier-admin button{font-size:13px;padding:9px 11px;border-radius:10px}
+@media(max-width:650px){
+  body{padding:10px}h1{font-size:23px}.item{grid-template-columns:1fr}.state{width:100%}
+  .action-row{grid-template-columns:1fr}.note-row{grid-template-columns:1fr}.addbar{grid-template-columns:1fr}
+  .user-grid{grid-template-columns:1fr}.status{align-items:flex-start;flex-direction:column}
+}
+
+.analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.analytics-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
+.analytics-card h3{margin:0 0 8px;font-size:20px}
+.analytics-line{border-top:1px solid var(--line);padding:8px 0;font-size:14px;color:#ddd}
+.analytics-line:first-of-type{border-top:0}
+.waste-form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px}
+.waste-grid{display:grid;grid-template-columns:1.2fr .7fr 1fr auto;gap:8px}
+.waste-grid input,.waste-grid select{background:#181818;color:white;border:1px solid var(--line);border-radius:14px;padding:12px;width:100%}
+.waste-line{padding:10px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.waste-line:first-of-type{border-top:0}
+@media(max-width:650px){.analytics-grid{grid-template-columns:1fr}.waste-grid{grid-template-columns:1fr}}
+
+
+.order-section-title{font-size:18px;font-weight:900;margin:12px 0 6px;padding:8px 10px;border-radius:12px}
+.order-section-title.urgent{background:rgba(139,30,30,.55)}
+.order-section-title.need{background:rgba(154,122,24,.55)}
+.order-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.order-actions button{font-size:13px;padding:9px 10px;border-radius:10px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>MLINSKI KAMEN</h1>
+<div class="sub">NABAVA / KUHINJA</div>
+
+<div id="login" class="login">
+<h2>Tko koristi sustav?</h2>
+<div class="user-grid" id="userGrid"></div>
+<div class="footer-note">Klikni svoje ime. Sustav pamti tko je oznacio artikl.</div>
+</div>
+
+<div id="app" class="hidden">
+<div class="status">
+<div><b>Prijavljen:</b> <span id="currentUser"></span><br><span class="meta">Status je IMA/TREBA/HITNO. Dobavljac se bira u narudzbi.</span></div>
+<button class="mutedBtn" onclick="logoutUser()">Promijeni korisnika</button>
+</div>
+<div class="topbar" id="topbar"></div>
+<div id="itemsView">
+<input class="search" id="searchInput" placeholder="🔍 Pretrazi artikl..." oninput="renderAll()" />
+<div class="tabs" id="tabs"></div>
+<div class="addbar">
+  <input id="newItemInput" placeholder="Dodaj novi artikl..." />
+  <button class="primary" onclick="addNewItem()">+ Dodaj</button>
+</div>
+<div id="items"></div>
+</div>
+<div id="orderView" class="hidden"></div>
+<div id="historyView" class="hidden"><div class="history" id="history"></div></div>
+<div id="analyticsView" class="hidden"></div>
+<div id="wasteView" class="hidden"></div>
+<div class="footer-note">Production verzija. Otpis vide i unose svi. Brisanje otpisa samo Teo/Anamarija.</div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBGBcGeqMCs-904J4-d1F00oRBik3djxTo",
+  authDomain: "mlinski-kuhinja.firebaseapp.com",
+  databaseURL: "https://mlinski-kuhinja-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mlinski-kuhinja",
+  storageBucket: "mlinski-kuhinja.firebasestorage.app",
+  messagingSenderId: "255693099347",
+  appId: "1:255693099347:web:de2e657e1d3758762b51a6",
+  measurementId: "G-DNSH8V8RBZ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// STARA V2 BAZA SAMO ZA MIGRACIJU
+const oldCategoriesRef = ref(db, "nabava/categories");
+const oldStateRef = ref(db, "nabava/state");
+
+// NOVA V3 BAZA
+const itemsRef = ref(db, "nabava_v3/items");
+const categoriesRef = ref(db, "nabava_v3/categories");
+const stateRef = ref(db, "nabava_v3/state");
+const historyRef = ref(db, "nabava_v3/history");
+const metaRef = ref(db, "nabava_v3/meta");
+const wasteRef = ref(db, "nabava_v3/waste");
+const wasteHistoryRef = ref(db, "nabava_v3/waste_history");
+const suppliersRef = ref(db, "nabava_v3/suppliers");
+
+const users = ["Marica","Sanjar","Nina","Ana","Kuhinja","Anamarija","Teo"];
+const admins = ["Teo","Anamarija"];
+const defaultSuppliers = ["Nedodijeljeno","Metro","Interalpha","Sale Nero","Ana","Ostalo"];
+let suppliers = [...defaultSuppliers];
+
+const defaultOldCategories = [
+ {id:"meso",name:"🥩 Meso",items:["Teletina","Svinjski vrat","Carsko","Piletina","Cevapi","Kebab","Spek tabla","Sunka za zagrebacki"]},
+ {id:"povrce",name:"🥔 Povrce",items:["Krumpir","Luk","Mrkva","Zelena salata","Kupus","Rajcica","Krastavci","Grah"]},
+ {id:"mlijecno",name:"🥛 Mlijecno",items:["Vrhnje za kuhanje","Kiselo vrhnje","Maslac","Sir","Kajmak","Mlijeko"]},
+ {id:"suho",name:"🧂 Suho / Konzervirano",items:["Riza","Gustin","Brasno","Secer","Sol","Papar","Kukuruz","Ocat","Majoneza","Senf"]},
+ {id:"pice",name:"🥤 Pice",items:["Cola 0.5","Fanta 0.5","Sprite 0.5","Jamnica","Pan lager","Pan zlatni","Bijelo vino","Crno vino"]},
+ {id:"ambalaza",name:"📦 Ambalaza / Potrosni",items:["Vrece za smece","Rukavice","Alu folija","Prozirna folija","Papirnati rucnici","Salvete","Kutije za dostavu"]},
+ {id:"kemija",name:"🧴 Kemija",items:["Arf","Deterdzent","Tablete za masinu","Sredstvo za pod","Odmascivac","Spuzvice"]}
+];
+
+let currentUser = localStorage.getItem("mk_nabava_user") || "";
+let currentView = "items";
+let activeCategory = "";
+let items = {};
+let categories = [];
+let state = {};
+let history = [];
+let waste = [];
+let wasteHistory = [];
+let oldCategoriesLoaded = false;
+let oldStateLoaded = false;
+let oldCategoriesData = null;
+let oldStateData = null;
+let importInProgress = false;
+let v3ItemsLoaded = false;
+let v3CategoriesLoaded = false;
+let v3ItemsData = null;
+let v3CategoriesData = null;
+
+function isAdmin(){ return admins.includes(currentUser); }
+function slugify(text){
+  return String(text).toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"_")
+    .replace(/^_+|_+$/g,"")
+    .substring(0,60) || ("item_"+Date.now());
+}
+function uniqueItemId(name, collection){
+  const base = slugify(name);
+  let id = base;
+  let n = 2;
+  while(collection[id]){ id = base + "_" + n; n++; }
+  return id;
+}
+function getItemName(itemId){ return items[itemId]?.name || itemId; }
+function stateLabel(s){ if(s==="urgent")return"HITNO"; if(s==="need")return"TREBA"; return"IMA"; }
+function stateClass(s){ if(s==="urgent")return"urgent"; if(s==="need")return"need"; return"ok"; }
+function formatShort(ts){ if(!ts)return""; return new Date(ts).toLocaleString("hr-HR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+function getCategoryName(id){ return categories.find(c=>c.id===id)?.name || id; }
+function itemState(itemId){ return state[itemId]?.status || "ok"; }
+function itemNote(itemId){ return state[itemId]?.note || ""; }
+function itemSupplier(itemId){ return state[itemId]?.supplier || state[itemId]?.lastSupplier || "Nedodijeljeno"; }
+function rememberedSupplier(itemId){ return state[itemId]?.lastSupplier || state[itemId]?.supplier || "Nedodijeljeno"; }
+function setItemSupplier(itemId, supplier){
+  const current = state[itemId] || {status:"ok", note:"", changedBy:"", changedAt:0};
+  state[itemId] = {
+    ...current,
+    supplier: supplier || "Nedodijeljeno",
+    lastSupplier: supplier || "Nedodijeljeno",
+    supplierChangedBy: currentUser,
+    supplierChangedAt: Date.now()
+  };
+  pushHistory({
+    time:Date.now(),
+    user:currentUser,
+    categoryId:"supplier",
+    itemId,
+    itemName:getItemName(itemId),
+    oldStatus:current.status || "ok",
+    newStatus:current.status || "ok",
+    oldNote:current.note || "",
+    note:(current.note || "") + " | Dobavljac: " + (supplier || "Nedodijeljeno")
+  });
+  set(stateRef, state);
+  renderAll();
+}
+function saveAll(){ set(itemsRef, items); set(categoriesRef, categories); }
+function pushHistory(entry){ push(historyRef, entry); }
+
+
+function migrateIfNeeded(){
+  if(importInProgress) return;
+  // V3.8: ne radimo automatski import.
+  // Stara nabava baza ostaje netaknuta.
+  // Uvoz se pokrece samo rucno preko gumba "Uvezi v2".
+  if(!v3ItemsLoaded || !v3CategoriesLoaded) return;
+
+  items = v3ItemsData || {};
+  if(Array.isArray(v3CategoriesData)){
+    categories = v3CategoriesData.map(c => ({
+      ...c,
+      items: Array.isArray(c.items) ? c.items : Object.values(c.items || {})
+    }));
+  } else if(v3CategoriesData){
+    categories = Object.values(v3CategoriesData).map(c => ({
+      ...c,
+      items: Array.isArray(c.items) ? c.items : Object.values(c.items || {})
+    }));
+  } else {
+    categories = [];
+  }
+
+  if(!activeCategory && categories.length) activeCategory = categories[0].id;
+  renderAll();
+}
+
+function setItemState(categoryId,itemId,newStatus,noteValue=null){
+  const oldStatus = state[itemId]?.status || "ok";
+  const oldNote = state[itemId]?.note || "";
+  const note = noteValue !== null ? noteValue : (newStatus === "ok" ? "" : oldNote);
+  const entryTime = Date.now();
+  const oldSupplier = state[itemId]?.supplier || "Nedodijeljeno";
+  const lastSupplier = state[itemId]?.lastSupplier || oldSupplier || "Nedodijeljeno";
+  const nextSupplier = newStatus === "ok" ? "Nedodijeljeno" : lastSupplier;
+
+  state[itemId] = {
+    status:newStatus,
+    note,
+    changedBy:currentUser,
+    changedAt:entryTime,
+    supplier: nextSupplier,
+    lastSupplier: lastSupplier
+  };
+  pushHistory({time:entryTime,user:currentUser,categoryId,itemId,itemName:getItemName(itemId),oldStatus,newStatus,oldNote,note});
+  set(stateRef, state);
+}
+function saveNote(categoryId,itemId,inputEl){
+  const note = inputEl.value.trim();
+  const currentStatus = itemState(itemId);
+
+  // Ako netko napise biljesku dok je artikl na IMA,
+  // automatski ga prebacujemo na TREBA da se vidi u narudzbi.
+  if(note && currentStatus === "ok"){
+    setItemState(categoryId,itemId,"need",note);
+    return;
+  }
+
+  setItemState(categoryId,itemId,currentStatus,note);
+}
+
+window.addNewItem = function addNewItem(){
+
+  const input = document.getElementById("newItemInput");
+  const name = input.value.trim();
+  if(!name) return;
+
+  const existingId = Object.keys(items).find(id => items[id].name.toLowerCase() === name.toLowerCase());
+  const itemId = existingId || uniqueItemId(name, items);
+  if(!existingId) items[itemId] = { id:itemId, name, createdAt:Date.now() };
+
+  const chosen = chooseCategoriesForItem(itemId, [activeCategory]);
+  if(!chosen) return;
+
+  categories.forEach(cat=>{
+    cat.items = (cat.items || []).filter(id=>id!==itemId);
+    if(chosen.includes(cat.id)) cat.items.push(itemId);
+  });
+
+  if(!state[itemId]) state[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0, supplier:"Nedodijeljeno", lastSupplier:"Nedodijeljeno"};
+
+  input.value = "";
+  saveAll();
+  set(stateRef, state);
+  renderAll();
+}
+
+function chooseCategoriesForItem(itemId, selectedIds){
+  const itemName = getItemName(itemId);
+  const list = categories.map((c,i)=>`${i+1}. ${c.name}${selectedIds.includes(c.id) ? " ✅" : ""}`).join("\n");
+  const def = selectedIds.map(id=>categories.findIndex(c=>c.id===id)+1).filter(n=>n>0).join(",");
+  const answer = prompt(`Gdje se prikazuje "${itemName}"?\n\nUpisi brojeve skladista odvojene zarezom:\n\n${list}`, def);
+  if(answer === null) return null;
+  const nums = answer.split(",").map(x=>Number(x.trim())).filter(n=>n>=1 && n<=categories.length);
+  const chosen = [...new Set(nums.map(n=>categories[n-1].id))];
+  if(!chosen.length){ alert("Moras odabrati barem jedno skladiste."); return null; }
+  return chosen;
+}
+
+function renderUsers(){
+  const grid=document.getElementById("userGrid"); grid.innerHTML="";
+  users.forEach(u=>{
+    const btn=document.createElement("button");
+    btn.textContent=u;
+    btn.onclick=()=>{currentUser=u;localStorage.setItem("mk_nabava_user",u);showApp()};
+    grid.appendChild(btn);
+  });
+}
+function showApp(){
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("currentUser").textContent=currentUser;
+  renderAll();
+}
+window.logoutUser=function(){
+  localStorage.removeItem("mk_nabava_user");
+  currentUser="";
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+}
+window.setView=function(view){
+  currentView=view;
+  document.getElementById("itemsView").classList.toggle("hidden",view!=="items");
+  document.getElementById("orderView").classList.toggle("hidden",view!=="order");
+  document.getElementById("historyView").classList.toggle("hidden",view!=="history");
+  document.getElementById("analyticsView").classList.toggle("hidden",view!=="analytics");
+  document.getElementById("wasteView").classList.toggle("hidden",view!=="waste");
+  renderAll();
+}
+
+function getProblems(){
+  const urgent=[]; const need=[];
+  Object.keys(items).forEach(itemId=>{
+    const s = itemState(itemId);
+    const entry = {
+      itemId,
+      itemName:getItemName(itemId),
+      note: itemNote(itemId),
+      changedBy: state[itemId]?.changedBy || "",
+      changedAt: state[itemId]?.changedAt || 0,
+      categories: categories.filter(c=>(c.items||[]).includes(itemId)).map(c=>c.name).join(", "),
+      supplier: itemSupplier(itemId)
+    };
+    if(s==="urgent") urgent.push(entry);
+    if(s==="need") need.push(entry);
+  });
+  return {urgent,need};
+}
+function getProblemCounts(){const p=getProblems();return {urgent:p.urgent.length,need:p.need.length}}
+
+function renderTopbar(){
+  const tb=document.getElementById("topbar"); tb.innerHTML="";
+  const itemsBtn=document.createElement("button");
+  itemsBtn.className=currentView==="items"?"primary":"mutedBtn";
+  itemsBtn.textContent="📋 Artikli";
+  itemsBtn.onclick=()=>setView("items");
+  tb.appendChild(itemsBtn);
+
+  const counts=getProblemCounts();
+  const orderBtn=document.createElement("button");
+  orderBtn.className=currentView==="order"?"yellow":"mutedBtn";
+  orderBtn.textContent=`📦 Narudzba 🔴${counts.urgent} 🟡${counts.need}`;
+  orderBtn.onclick=()=>setView("order");
+  tb.appendChild(orderBtn);
+
+  const wasteBtn=document.createElement("button");
+  wasteBtn.className=currentView==="waste"?"primary":"mutedBtn";
+  wasteBtn.textContent="📉 Otpis";
+  wasteBtn.onclick=()=>setView("waste");
+  tb.appendChild(wasteBtn);
+
+  if(isAdmin()){
+    const analyticsBtn=document.createElement("button");
+    analyticsBtn.className=currentView==="analytics"?"primary":"mutedBtn";
+    analyticsBtn.textContent="📊 Statistika";
+    analyticsBtn.onclick=()=>setView("analytics");
+    tb.appendChild(analyticsBtn);
+
+    const historyBtn=document.createElement("button");
+    historyBtn.className=currentView==="history"?"primary":"mutedBtn";
+    historyBtn.textContent="📜 Povijest";
+    historyBtn.onclick=()=>setView("history");
+    tb.appendChild(historyBtn);
+
+    const addCat=document.createElement("button");
+    addCat.className="purple";
+    addCat.textContent="+ Skladiste";
+    addCat.onclick=addCategory;
+    tb.appendChild(addCat);
+
+    const addSupplierBtn=document.createElement("button");
+    addSupplierBtn.className="purple";
+    addSupplierBtn.textContent="+ Dobavljac";
+    addSupplierBtn.onclick=addSupplier;
+    tb.appendChild(addSupplierBtn);
+  }
+}
+function renderTabs(){
+  const tabs=document.getElementById("tabs"); tabs.innerHTML="";
+  categories.forEach(cat=>{
+    const btn=document.createElement("button");
+    btn.textContent=cat.name;
+    btn.className=cat.id===activeCategory?"active":"";
+    btn.onclick=()=>{activeCategory=cat.id;renderAll()};
+    tabs.appendChild(btn);
+  });
+}
+function matchesSearch(itemId){
+  const q=document.getElementById("searchInput")?.value?.trim().toLowerCase()||"";
+  if(!q)return true;
+  return getItemName(itemId).toLowerCase().includes(q);
+}
+function renderItems(){
+  const wrap=document.getElementById("items"); wrap.innerHTML="";
+  const q=document.getElementById("searchInput")?.value?.trim()||"";
+
+  if(q){
+    const box=document.createElement("div"); box.className="category";
+    const title=document.createElement("div"); title.className="cat-title"; title.textContent=`🔍 Rezultati za: ${q}`; box.appendChild(title);
+    Object.keys(items).filter(matchesSearch).forEach(itemId=>box.appendChild(buildItemRow({id:"search",name:"Pretraga"}, itemId)));
+    wrap.appendChild(box); return;
+  }
+
+  const cat=categories.find(c=>c.id===activeCategory) || categories[0];
+  if(!cat){ wrap.innerHTML='<div class="meta">Nema skladista.</div>'; return; }
+
+  const box=document.createElement("div"); box.className="category";
+  const title=document.createElement("div"); title.className="cat-title";
+  title.innerHTML = `<span>${cat.name}</span>`;
+  if(isAdmin()){
+    const catActions=document.createElement("div"); catActions.className="cat-actions";
+    const rename=document.createElement("button"); rename.className="primary"; rename.textContent="✏️ Naziv"; rename.onclick=()=>renameCategory(cat.id);
+    const up=document.createElement("button"); up.className="mutedBtn"; up.textContent="⬆️"; up.onclick=()=>moveCategory(cat.id,-1);
+    const down=document.createElement("button"); down.className="mutedBtn"; down.textContent="⬇️"; down.onclick=()=>moveCategory(cat.id,1);
+    const del=document.createElement("button"); del.className="danger"; del.textContent="🗑️"; del.onclick=()=>deleteCategory(cat.id);
+    catActions.append(rename,up,down,del);
+    title.appendChild(catActions);
+  }
+  box.appendChild(title);
+
+  (cat.items || []).forEach(itemId=>box.appendChild(buildItemRow(cat,itemId)));
+  wrap.appendChild(box);
+}
+function buildItemRow(cat,itemId){
+  const row=document.createElement("div"); row.className="item";
+  const s=itemState(itemId);
+  const changedBy=state[itemId]?.changedBy||"";
+  const changedAt=state[itemId]?.changedAt||"";
+  const note=itemNote(itemId);
+  const places=categories.filter(c=>(c.items||[]).includes(itemId)).map(c=>c.name).join(", ");
+
+  const left=document.createElement("div");
+  left.innerHTML=`<div class="item-name">${getItemName(itemId)}</div>
+    <div class="meta">${changedBy?`Oznacio: ${changedBy} • ${formatShort(changedAt)}`:"Nije oznaceno"}${isAdmin()?`<br>📍 ${places}`:""}</div>
+    <div class="supplier-badge">🚚 ${itemSupplier(itemId)}</div>
+    ${note?`<div class="note">📝 ${note}</div>`:""}`;
+
+  const statusBtn=document.createElement("button");
+  statusBtn.className=`state ${stateClass(s)}`;
+  statusBtn.textContent=stateLabel(s);
+  statusBtn.onclick=()=>row.classList.toggle("open");
+
+  const actions=document.createElement("div"); actions.className="action-row";
+  const okBtn=document.createElement("button"); okBtn.className="green"; okBtn.textContent="IMA"; okBtn.onclick=()=>setItemState(cat.id,itemId,"ok");
+  const needBtn=document.createElement("button"); needBtn.className="yellow"; needBtn.textContent="TREBA"; needBtn.onclick=()=>setItemState(cat.id,itemId,"need");
+  const urgentBtn=document.createElement("button"); urgentBtn.className="danger"; urgentBtn.textContent="HITNO"; urgentBtn.onclick=()=>setItemState(cat.id,itemId,"urgent");
+  actions.append(okBtn,needBtn,urgentBtn);
+
+  const noteRow=document.createElement("div"); noteRow.className="note-row";
+  const input=document.createElement("input"); input.className="note-input"; input.placeholder="Biljeska nije obavezna..."; input.value=note;
+  const saveBtn=document.createElement("button"); saveBtn.className="primary"; saveBtn.textContent="Spremi biljesku"; saveBtn.onclick=()=>saveNote(cat.id,itemId,input);
+  noteRow.append(input,saveBtn);
+
+  const supplierRow=document.createElement("div"); supplierRow.className="supplier-row";
+  const supplierSelect=document.createElement("select"); supplierSelect.className="supplier-select";
+  suppliers.forEach(sup=>{
+    const opt=document.createElement("option");
+    opt.value=sup;
+    opt.textContent=sup;
+    if(itemSupplier(itemId)===sup) opt.selected=true;
+    supplierSelect.appendChild(opt);
+  });
+  const supplierBtn=document.createElement("button"); supplierBtn.className="primary"; supplierBtn.textContent="Spremi dobavljaca";
+  supplierBtn.onclick=()=>setItemSupplier(itemId,supplierSelect.value);
+  supplierRow.append(supplierSelect,supplierBtn);
+
+  row.append(left,statusBtn,actions,noteRow,supplierRow);
+
+  if(isAdmin()){
+    const adm=document.createElement("div"); adm.className="admin-actions";
+    const rename=document.createElement("button"); rename.className="primary"; rename.textContent="✏️ Naziv"; rename.onclick=()=>renameItem(itemId);
+    const placesBtn=document.createElement("button"); placesBtn.className="purple"; placesBtn.textContent="📍 Skladista"; placesBtn.onclick=()=>manageItemCategories(itemId);
+    const up=document.createElement("button"); up.className="mutedBtn"; up.textContent="⬆️ Gore"; up.onclick=()=>moveItemInCategory(activeCategory,itemId,-1);
+    const down=document.createElement("button"); down.className="mutedBtn"; down.textContent="⬇️ Dolje"; down.onclick=()=>moveItemInCategory(activeCategory,itemId,1);
+    const rem=document.createElement("button"); rem.className="danger"; rem.textContent="Makni iz skladista"; rem.onclick=()=>removeFromCategory(activeCategory,itemId);
+    const del=document.createElement("button"); del.className="danger"; del.textContent="Obrisi svugdje"; del.onclick=()=>deleteItemEverywhere(itemId);
+    adm.append(rename,placesBtn,up,down,rem,del);
+    row.appendChild(adm);
+  }
+  return row;
+}
+
+function renderOrder(){
+  const wrap=document.getElementById("orderView"); wrap.innerHTML="";
+  const {urgent,need}=getProblems();
+  let all=[...urgent.map(x=>({...x, statusLabel:"HITNO"})), ...need.map(x=>({...x, statusLabel:"TREBA"}))];
+
+  const clearBox=document.createElement("div");
+  clearBox.className="problem-card";
+  clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Prvo HITNO, zatim TREBA. Dobavljac se pamti po zadnjem odabiru.</div>`;
+  const clearBtn=document.createElement("button"); clearBtn.className="danger"; clearBtn.textContent="✅ OBRISI CIJELU NARUDZBU"; clearBtn.onclick=clearOrder;
+  clearBox.appendChild(document.createElement("br")); clearBox.appendChild(clearBtn); wrap.appendChild(clearBox);
+
+  const orderSearch=document.createElement("input");
+  orderSearch.className="search";
+  orderSearch.id="orderSearchInput";
+  orderSearch.placeholder="🔍 Pretrazi narudzbu...";
+  orderSearch.value=window.currentOrderSearch || "";
+  orderSearch.oninput=()=>{
+    window.currentOrderSearch=orderSearch.value;
+    const cursorPos = orderSearch.selectionStart || orderSearch.value.length;
+    renderOrder();
+    setTimeout(()=>{
+      const el=document.getElementById("orderSearchInput");
+      if(el){
+        el.focus();
+        el.setSelectionRange(cursorPos,cursorPos);
+      }
+    },0);
+  };
+  wrap.appendChild(orderSearch);
+
+  const q=(window.currentOrderSearch || "").trim().toLowerCase();
+  if(q){
+    all = all.filter(x =>
+      (x.itemName || "").toLowerCase().includes(q) ||
+      (x.note || "").toLowerCase().includes(q) ||
+      (x.supplier || "").toLowerCase().includes(q) ||
+      (x.categories || "").toLowerCase().includes(q)
+    );
+  }
+
+  if(!all.length){
+    const empty=document.createElement("div");
+    empty.className="problem-card";
+    empty.innerHTML='<div class="meta">Nema artikala u narudzbi ili nema rezultata za pretragu.</div>';
+    wrap.appendChild(empty);
+    return;
+  }
+
+  const grouped = {};
+  all.forEach(x=>{
+    const sup = x.supplier || "Nedodijeljeno";
+    if(!grouped[sup]) grouped[sup]=[];
+    grouped[sup].push(x);
+  });
+
+  const supplierOrder = ["Nedodijeljeno", ...suppliers.filter(s=>s!=="Nedodijeljeno")];
+
+  supplierOrder.forEach(sup=>{
+    const arr = grouped[sup] || [];
+    if(!arr.length) return;
+
+    const urgentArr = arr.filter(x=>x.statusLabel==="HITNO").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr"));
+    const needArr = arr.filter(x=>x.statusLabel==="TREBA").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr"));
+
+    const card=document.createElement("div");
+    card.className="supplier-card";
+
+    const title=document.createElement("div");
+    title.className="supplier-title";
+    title.innerHTML=`<span>📦 ${sup} (${arr.length})<br><span class="meta">🔴 HITNO: ${urgentArr.length} &nbsp; 🟡 TREBA: ${needArr.length}</span></span>`;
+
+    const btns=document.createElement("div");
+    btns.style.display="flex";
+    btns.style.gap="8px";
+    btns.style.flexWrap="wrap";
+
+    const copy=document.createElement("button");
+    copy.className="copy-btn";
+    copy.textContent="KOPIRAJ";
+    copy.onclick=()=>copySupplierOrder(sup,arr);
+
+    const allArrived=document.createElement("button");
+    allArrived.className="green";
+    allArrived.textContent="SVE STIGLO";
+    allArrived.onclick=()=>markSupplierArrived(sup,arr);
+
+    btns.append(copy,allArrived);
+    title.appendChild(btns);
+    card.appendChild(title);
+
+    function renderSection(label, sectionArr, cls){
+      if(!sectionArr.length) return;
+      const st=document.createElement("div");
+      st.className="order-section-title " + cls;
+      st.textContent=label + " (" + sectionArr.length + ")";
+      card.appendChild(st);
+
+      sectionArr.forEach(x=>{
+        const line=document.createElement("div");
+        line.className="problem-line";
+        line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.categories} • ${x.changedBy||""} ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
+
+        const right=document.createElement("div");
+        right.className="order-actions";
+
+        const select=document.createElement("select");
+        select.className="supplier-select";
+        select.style.maxWidth="150px";
+        suppliers.forEach(s=>{
+          const opt=document.createElement("option");
+          opt.value=s;
+          opt.textContent=s;
+          if((x.supplier||"Nedodijeljeno")===s) opt.selected=true;
+          select.appendChild(opt);
+        });
+        select.onchange=()=>setItemSupplier(x.itemId,select.value);
+
+        const needBtn=document.createElement("button");
+        needBtn.className="yellow";
+        needBtn.textContent="TREBA";
+        needBtn.onclick=()=>setItemState("order",x.itemId,"need");
+
+        const urgentBtn=document.createElement("button");
+        urgentBtn.className="danger";
+        urgentBtn.textContent="HITNO";
+        urgentBtn.onclick=()=>setItemState("order",x.itemId,"urgent");
+
+        const arrived=document.createElement("button");
+        arrived.className="green";
+        arrived.textContent="Vrati na stanje";
+        arrived.onclick=()=>setItemState("order",x.itemId,"ok");
+
+        right.append(select,needBtn,urgentBtn,arrived);
+        line.appendChild(right);
+        card.appendChild(line);
+      });
+    }
+
+    renderSection("🔴 HITNO", urgentArr, "urgent");
+    renderSection("🟡 TREBA", needArr, "need");
+
+    wrap.appendChild(card);
+  });
+}
+
+function markSupplierArrived(supplierName, arr){
+  if(!arr.length) return;
+  if(!confirm(`Jeste li sigurni da je stigla cijela narudzba od ${supplierName}?`)) return;
+
+  arr.forEach(x=>{
+    const oldStatus=state[x.itemId]?.status||"ok";
+    const oldNote=state[x.itemId]?.note||"";
+    const lastSupplier = state[x.itemId]?.lastSupplier || state[x.itemId]?.supplier || "Nedodijeljeno";
+    state[x.itemId]={
+      status:"ok",
+      note:"",
+      changedBy:currentUser,
+      changedAt:Date.now(),
+      supplier:"Nedodijeljeno",
+      lastSupplier:lastSupplier
+    };
+    pushHistory({time:Date.now(),user:currentUser,categoryId:"arrived",itemId:x.itemId,itemName:x.itemName,oldStatus,newStatus:"ok",oldNote,note:"Sve stiglo - " + supplierName});
+  });
+  set(stateRef,state);
+  renderAll();
+}
+
+async function copySupplierOrder(supplierName, arr){
+  const ordered = [
+    ...arr.filter(x=>x.statusLabel==="HITNO").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr")),
+    ...arr.filter(x=>x.statusLabel==="TREBA").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr"))
+  ];
+
+  const lines = [];
+  lines.push(supplierName.toUpperCase());
+  lines.push("");
+  ordered.forEach(x=>{
+    const note = x.note ? " (" + x.note + ")" : "";
+    lines.push("- " + x.itemName + note);
+  });
+  const text = lines.join("\n");
+
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Kopirano: " + supplierName);
+  }catch(e){
+    prompt("Kopiraj narudzbu:", text);
+  }
+}
+
+function clearOrder(){
+  const {urgent,need}=getProblems();
+  const all=[...urgent,...need];
+  if(!all.length){alert("Narudzba je vec prazna.");return;}
+  if(!confirm(`Obrisati cijelu narudzbu?\n\nVratit ce se na IMA: ${all.length} artikala.`)) return;
+
+  all.forEach(x=>{
+    const oldStatus=state[x.itemId]?.status||"ok";
+    const oldNote=state[x.itemId]?.note||"";
+    state[x.itemId]={status:"ok",note:"",changedBy:currentUser,changedAt:Date.now(),supplier:"Nedodijeljeno", lastSupplier:"Nedodijeljeno"};
+    pushHistory({time:Date.now(),user:currentUser,categoryId:"order",itemId:x.itemId,itemName:x.itemName,oldStatus,newStatus:"ok",oldNote,note:""});
+  });
+  set(stateRef,state);
+  renderAll();
+}
+function renderHistory(){
+  const wrap=document.getElementById("history"); wrap.innerHTML="";
+  if(!isAdmin()){ wrap.innerHTML=`<div class="meta">Povijest je dostupna samo Teu i Anamariji.</div>`; return; }
+  if(!history.length){ wrap.innerHTML=`<div class="meta">Jos nema povijesti.</div>`; return; }
+  history.slice(0,200).forEach(h=>{
+    const line=document.createElement("div"); line.className="history-line";
+    const time=new Date(h.time).toLocaleString("hr-HR");
+    const noteText=h.note?` • Biljeska: ${h.note}`:"";
+    line.textContent=`${time} — ${h.user} — ${getCategoryName(h.categoryId)} — ${h.itemName}: ${stateLabel(h.oldStatus)} → ${stateLabel(h.newStatus)}${noteText}`;
+    wrap.appendChild(line);
+  });
+}
+
+
+// DOBAVLJACI
+function saveSuppliers(){
+  if(!suppliers.includes("Nedodijeljeno")) suppliers.unshift("Nedodijeljeno");
+  suppliers = [...new Set(suppliers.map(s=>String(s).trim()).filter(Boolean))];
+  set(suppliersRef, suppliers);
+}
+
+function addSupplier(){
+  if(!isAdmin()) return;
+  const name = prompt("Naziv novog dobavljaca:");
+  if(!name) return;
+  const clean = name.trim();
+  if(!clean) return;
+  if(suppliers.some(s=>s.toLowerCase()===clean.toLowerCase())){
+    alert("Taj dobavljac vec postoji.");
+    return;
+  }
+  suppliers.push(clean);
+  saveSuppliers();
+}
+
+function renderSupplierAdminBox(container){
+  if(!isAdmin()) return;
+  const box=document.createElement("div");
+  box.className="supplier-admin";
+
+  suppliers.forEach(s=>{
+    if(s==="Nedodijeljeno") return;
+    const rename=document.createElement("button");
+    rename.className="primary";
+    rename.textContent="✏️ " + s;
+    rename.onclick=()=>renameSupplier(s);
+
+    const del=document.createElement("button");
+    del.className="danger";
+    del.textContent="🗑️ " + s;
+    del.onclick=()=>deleteSupplier(s);
+
+    box.append(rename,del);
+  });
+
+  container.appendChild(box);
+}
+
+
+
+function renderAnalytics(){
+  const wrap=document.getElementById("analyticsView"); 
+  if(!wrap) return;
+  wrap.innerHTML="";
+
+  const allItems = Object.keys(items || {});
+  const needItems = allItems.filter(id=>itemState(id)==="need");
+  const urgentItems = allItems.filter(id=>itemState(id)==="urgent");
+  const okItems = allItems.filter(id=>itemState(id)==="ok");
+
+  const orderByChanged = [...needItems, ...urgentItems].map(id=>({
+    id,
+    name:getItemName(id),
+    status:itemState(id),
+    changedAt:state[id]?.changedAt || 0,
+    changedBy:state[id]?.changedBy || "",
+    supplier:itemSupplier ? itemSupplier(id) : (state[id]?.supplier || "Nedodijeljeno")
+  }));
+
+  const byUser = {};
+  Object.values(history || {}).forEach(h=>{
+    if(!h || !h.user) return;
+    byUser[h.user]=(byUser[h.user]||0)+1;
+  });
+
+  const byItem = {};
+  Object.values(history || {}).forEach(h=>{
+    if(!h || !h.itemId) return;
+    if(h.newStatus==="need" || h.newStatus==="urgent"){
+      byItem[h.itemId]=(byItem[h.itemId]||0)+1;
+    }
+  });
+
+  const topItems = Object.entries(byItem)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,20)
+    .map(([id,count])=>({name:getItemName(id),count}));
+
+  const now = Date.now();
+  const staleAll = allItems.map(id=>{
+    const ts = state[id]?.changedAt || 0;
+    const days = ts ? Math.floor((now-ts)/(1000*60*60*24)) : 999;
+    return {id,name:getItemName(id),days,ts};
+  }).sort((a,b)=>b.days-a.days);
+
+  const stale14 = staleAll.filter(x=>x.days>=14 && x.days<30).slice(0,30);
+  const stale30 = staleAll.filter(x=>x.days>=30).slice(0,30);
+
+  const grid=document.createElement("div");
+  grid.className="analytics-grid";
+
+  function card(title, htmlContent){
+    const c=document.createElement("div");
+    c.className="analytics-card";
+    c.innerHTML=`<h3>${title}</h3>${htmlContent}`;
+    grid.appendChild(c);
+  }
+
+  card("📦 Trenutno stanje",
+    `<div class="analytics-line">Ukupno artikala: <b>${allItems.length}</b></div>
+     <div class="analytics-line">IMA: <b>${okItems.length}</b></div>
+     <div class="analytics-line">TREBA: <b>${needItems.length}</b></div>
+     <div class="analytics-line">HITNO: <b>${urgentItems.length}</b></div>`
+  );
+
+  card("👤 Aktivnost korisnika",
+    Object.entries(byUser).sort((a,b)=>b[1]-a[1]).slice(0,10)
+      .map(([u,c])=>`<div class="analytics-line">${u}: <b>${c}</b></div>`).join("") || '<div class="analytics-line">Nema podataka.</div>'
+  );
+
+  card("🔥 Najcesce narucivano",
+    topItems.map(x=>`<div class="analytics-line">${x.name}: <b>${x.count}</b></div>`).join("") || '<div class="analytics-line">Nema podataka.</div>'
+  );
+
+  card("🟡 Nije dirano 14-29 dana",
+    stale14.map(x=>`<div class="analytics-line">${x.name}: <b>${x.days} dana</b></div>`).join("") || '<div class="analytics-line">Nema takvih artikala.</div>'
+  );
+
+  card("🔴 Nije dirano 30+ dana",
+    stale30.map(x=>`<div class="analytics-line">${x.name}: <b>${x.days===999?"nikad":x.days+" dana"}</b></div>`).join("") || '<div class="analytics-line">Nema takvih artikala.</div>'
+  );
+
+  wrap.appendChild(grid);
+}
+
+function addWaste(){
+  const item = document.getElementById("wasteItem")?.value?.trim() || "";
+  const qty = document.getElementById("wasteQty")?.value?.trim() || "";
+  const reason = document.getElementById("wasteReason")?.value?.trim() || "";
+  if(!item){
+    alert("Upisi sto se otpisuje.");
+    return;
+  }
+  const entry = {
+    time: Date.now(),
+    user: currentUser,
+    item,
+    qty,
+    reason
+  };
+  push(wasteRef, entry);
+  push(wasteHistoryRef, {...entry, action:"DODANO"});
+  document.getElementById("wasteItem").value="";
+  document.getElementById("wasteQty").value="";
+  document.getElementById("wasteReason").value="";
+}
+
+function deleteWaste(id){
+  if(!isAdmin()) return;
+  const existing = waste.find(w=>w.id===id);
+  if(!confirm("Obrisati ovaj otpis?")) return;
+  if(existing){
+    push(wasteHistoryRef, {
+      time: Date.now(),
+      user: currentUser,
+      action:"OBRISANO",
+      originalTime: existing.time || 0,
+      originalUser: existing.user || "",
+      item: existing.item || "",
+      qty: existing.qty || "",
+      reason: existing.reason || ""
+    });
+  }
+  remove(ref(db, "nabava_v3/waste/" + id));
+}
+
+function renderWaste(){
+  const wrap=document.getElementById("wasteView");
+  if(!wrap) return;
+  wrap.innerHTML="";
+
+  const form=document.createElement("div");
+  form.className="waste-form";
+  form.innerHTML=`
+    <div class="problem-title">📉 Otpis</div>
+    <div class="meta">Otpis nije povezan s artiklima. Upisi sto je baceno, kolicinu i razlog.</div>
+    <div class="waste-grid" style="margin-top:10px">
+      <input id="wasteItem" placeholder="Sto se otpisuje? npr. Rajcica" />
+      <input id="wasteQty" placeholder="Kolicina npr. 3 kg" />
+      <input id="wasteReason" placeholder="Razlog npr. pokvareno" />
+      <button class="danger" onclick="addWaste()">+ Otpis</button>
+    </div>
+  `;
+  wrap.appendChild(form);
+
+  const card=document.createElement("div");
+  card.className="problem-card";
+  card.innerHTML='<div class="problem-title">Zadnji otpisi</div>';
+
+  if(!waste.length){
+    card.innerHTML += '<div class="meta">Jos nema otpisa.</div>';
+  } else {
+    waste.slice(0,100).forEach(w=>{
+      const line=document.createElement("div");
+      line.className="waste-line";
+      line.innerHTML=`<div><b>${w.item}</b><div class="meta">${formatShort(w.time)} • ${w.user||""}${w.qty? " • " + w.qty:""}</div>${w.reason?`<div class="note">📝 ${w.reason}</div>`:""}</div>`;
+      if(isAdmin()){
+        const del=document.createElement("button");
+        del.className="danger";
+        del.textContent="Obrisi";
+        del.onclick=()=>deleteWaste(w.id);
+        line.appendChild(del);
+      }
+      card.appendChild(line);
+    });
+  }
+  wrap.appendChild(card);
+
+  const hist=document.createElement("div");
+  hist.className="problem-card";
+  hist.innerHTML='<div class="problem-title">📜 Povijest otpisa</div>';
+
+  if(!wasteHistory.length){
+    hist.innerHTML += '<div class="meta">Jos nema povijesti otpisa.</div>';
+  } else {
+    wasteHistory.slice(0,100).forEach(w=>{
+      const line=document.createElement("div");
+      line.className="waste-line";
+      const actionIcon = w.action==="OBRISANO" ? "🗑️ OBRISANO" : "➕ DODANO";
+      line.innerHTML=`<div><b>${actionIcon}: ${w.item}</b><div class="meta">${formatShort(w.time)} • ${w.user||""}${w.qty? " • " + w.qty:""}</div>${w.reason?`<div class="note">📝 ${w.reason}</div>`:""}</div>`;
+      hist.appendChild(line);
+    });
+  }
+  wrap.appendChild(hist);
+}
+
+
+// ADMIN FUNKCIJE
+function renameItem(itemId){
+  const oldName=getItemName(itemId);
+  const name=prompt("Novi naziv artikla:",oldName);
+  if(!name || name.trim()===oldName) return;
+  items[itemId].name=name.trim();
+  set(itemsRef,items);
+}
+function manageItemCategories(itemId){
+  const selected = categories.filter(c=>(c.items||[]).includes(itemId)).map(c=>c.id);
+  const chosen = chooseCategoriesForItem(itemId, selected);
+  if(!chosen) return;
+  categories.forEach(cat=>{
+    cat.items=(cat.items||[]).filter(id=>id!==itemId);
+    if(chosen.includes(cat.id)) cat.items.push(itemId);
+  });
+  set(categoriesRef,categories);
+}
+function removeFromCategory(catId,itemId){
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  if(!confirm(`Maknuti "${getItemName(itemId)}" iz "${cat.name}"?`)) return;
+  cat.items=(cat.items||[]).filter(id=>id!==itemId);
+  set(categoriesRef,categories);
+}
+function deleteItemEverywhere(itemId){
+  if(!confirm(`Potpuno obrisati artikl "${getItemName(itemId)}" iz svih skladista?`)) return;
+  delete items[itemId];
+  delete state[itemId];
+  categories.forEach(cat=>{cat.items=(cat.items||[]).filter(id=>id!==itemId)});
+  set(itemsRef,items);
+  set(categoriesRef,categories);
+  set(stateRef,state);
+}
+function moveItemInCategory(catId,itemId,dir){
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  const idx=(cat.items||[]).indexOf(itemId);
+  if(idx<0) return;
+  const ni=idx+dir;
+  if(ni<0 || ni>=cat.items.length) return;
+  const tmp=cat.items[idx]; cat.items[idx]=cat.items[ni]; cat.items[ni]=tmp;
+  set(categoriesRef,categories);
+}
+function addCategory(){
+  const name=prompt("Naziv novog skladista:");
+  if(!name) return;
+  const idBase=slugify(name);
+  let id=idBase; let n=2;
+  while(categories.some(c=>c.id===id)){id=idBase+"_"+n;n++}
+  categories.push({id,name,items:[]});
+  activeCategory=id;
+  set(categoriesRef,categories);
+}
+function renameCategory(catId){
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  const name=prompt("Novi naziv skladista:",cat.name);
+  if(!name || name.trim()===cat.name) return;
+  cat.name=name.trim();
+  set(categoriesRef,categories);
+}
+function deleteCategory(catId){
+  const cat=categories.find(c=>c.id===catId);
+  if(!cat) return;
+  if(!confirm(`Obrisati skladiste "${cat.name}"?\n\nArtikli se ne brisu, samo se uklanja ovo skladiste.`)) return;
+  categories=categories.filter(c=>c.id!==catId);
+  if(activeCategory===catId) activeCategory=categories[0]?.id || "";
+  set(categoriesRef,categories);
+}
+function moveCategory(catId,dir){
+  const idx=categories.findIndex(c=>c.id===catId);
+  if(idx<0)return;
+  const ni=idx+dir;
+  if(ni<0 || ni>=categories.length)return;
+  const tmp=categories[idx]; categories[idx]=categories[ni]; categories[ni]=tmp;
+  set(categoriesRef,categories);
+}
+
+function renderAll(){
+  renderTopbar();
+  renderTabs();
+  if(currentView==="items")renderItems();
+  if(currentView==="order")renderOrder();
+  if(currentView==="history")renderHistory();
+  if(currentView==="analytics")renderAnalytics();
+  if(currentView==="waste")renderWaste();
+}
+
+// FIREBASE LISTENERS
+onValue(oldCategoriesRef, snapshot=>{oldCategoriesData=snapshot.val(); oldCategoriesLoaded=true; migrateIfNeeded();});
+onValue(oldStateRef, snapshot=>{oldStateData=snapshot.val(); oldStateLoaded=true; migrateIfNeeded();});
+onValue(itemsRef, snapshot=>{v3ItemsData=snapshot.val(); v3ItemsLoaded=true; items=v3ItemsData||items; migrateIfNeeded(); renderAll();});
+onValue(categoriesRef, snapshot=>{
+  v3CategoriesData=snapshot.val();
+  v3CategoriesLoaded=true;
+  migrateIfNeeded();
+  renderAll();
+});
+onValue(stateRef, snapshot=>{state=snapshot.val()||{}; renderAll();});
+onValue(historyRef, snapshot=>{
+  const data=snapshot.val()||{};
+  history=Object.values(data).sort((a,b)=>(b.time||0)-(a.time||0)).slice(0,500);
+  renderAll();
+});
+
+
+// CISTI RUCNI IMPORT IZ V2 - V3.8 FIX
+window.importV2Manual = async function importV2Manual(){
+  try{
+    const oldCatsRaw = oldCategoriesData || [];
+    const oldCats = Array.isArray(oldCatsRaw) ? oldCatsRaw : Object.values(oldCatsRaw || {});
+    const oldState = oldStateData || {};
+
+    if(!oldCats.length){
+      alert("Ne vidim v2 kategorije. Pricekaj par sekundi ili refreshaj stranicu pa probaj opet.");
+      return;
+    }
+
+    const newItems = {};
+    const newCategories = [];
+    const newState = {};
+    const nameToId = {};
+
+    oldCats.forEach(cat=>{
+      if(!cat) return;
+
+      const catId = cat.id || slugify(cat.name || ("skladiste_" + Date.now()));
+      const catName = cat.name || catId;
+      const rawItems = Array.isArray(cat.items) ? cat.items : Object.values(cat.items || {});
+      const itemIds = [];
+
+      rawItems.forEach(raw=>{
+        const name = String(raw || "").trim();
+        if(!name) return;
+
+        const nameKey = name.toLowerCase();
+        let itemId = nameToId[nameKey];
+
+        if(!itemId){
+          itemId = slugify(name);
+          let base = itemId;
+          let n = 2;
+          while(newItems[itemId]){
+            itemId = base + "_" + n;
+            n++;
+          }
+          nameToId[nameKey] = itemId;
+          newItems[itemId] = {id:itemId, name:name, createdAt:Date.now()};
+        }
+
+        if(!itemIds.includes(itemId)) itemIds.push(itemId);
+
+        if(!newState[itemId]){
+          newState[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0, supplier:"Nedodijeljeno", lastSupplier:"Nedodijeljeno"};
+        }
+
+        const oldKey = catId + "__" + name;
+        const old = oldState[oldKey] || {};
+
+        if(old.status === "urgent" || (old.status === "need" && newState[itemId].status !== "urgent")){
+          newState[itemId] = {
+            status: old.status || "ok",
+            note: old.note || "",
+            changedBy: old.changedBy || "",
+            changedAt: old.changedAt || 0,
+            supplier:"Nedodijeljeno"
+          };
+        }
+      });
+
+      // BITNO: dodaj skladiste i kad ima 0 artikala, ali items uvijek mora postojati
+      newCategories.push({id:catId, name:catName, items:itemIds});
+    });
+
+    const countItems = Object.keys(newItems).length;
+    const countCats = newCategories.length;
+
+    if(!countItems || !countCats){
+      alert("Import nije dobar. Skladista: " + countCats + ", artikala: " + countItems);
+      return;
+    }
+
+    const ok = confirm(
+      "Uvesti v2 u v3?\\n\\n" +
+      "Ovo ce napraviti potpuno novi cisti nabava_v3.\\n" +
+      "Stara nabava baza ostaje netaknuta.\\n\\n" +
+      "Skladista: " + countCats + "\\n" +
+      "Artikala: " + countItems
+    );
+    if(!ok) return;
+
+    importInProgress = true;
+
+    // Lokalno prvo postavi tocno stanje
+    items = newItems;
+    categories = newCategories;
+    state = newState;
+    activeCategory = categories[0]?.id || "";
+
+    // SPREMI KATEGORIJE PRVE, da listener ne pregazi categories na []
+    await set(categoriesRef, newCategories);
+    await set(itemsRef, newItems);
+    await set(stateRef, newState);
+    await set(metaRef, {version:"v3.8-manual-import-fixed", importedFromV2At:Date.now()});
+
+    importInProgress = false;
+
+    alert("Gotovo. Uvezeno skladista: " + newCategories.length + ", artikala: " + Object.keys(newItems).length);
+    renderAll();
+  }catch(err){
+    importInProgress = false;
+    console.error("V3.8 IMPORT ERROR", err);
+    alert("Import je puknuo: " + err.message);
+  }
+};
+
+
+onValue(suppliersRef, snapshot=>{
+  const data=snapshot.val();
+  if(Array.isArray(data) && data.length){
+    suppliers=data;
+    if(!suppliers.includes("Nedodijeljeno")) suppliers.unshift("Nedodijeljeno");
+  } else {
+    suppliers=[...defaultSuppliers];
+    set(suppliersRef,suppliers);
+  }
+  renderAll();
+});
+
+
+onValue(wasteRef, snapshot=>{
+  const data=snapshot.val()||{};
+  waste=Object.entries(data).map(([id,x])=>({id,...x})).sort((a,b)=>(b.time||0)-(a.time||0));
+  renderAll();
+});
+
+
+onValue(wasteHistoryRef, snapshot=>{
+  const data=snapshot.val()||{};
+  wasteHistory=Object.entries(data).map(([id,x])=>({id,...x})).sort((a,b)=>(b.time||0)-(a.time||0));
+  renderAll();
+});
+
+window.addWaste=addWaste;
+window.renderAll=renderAll;
+renderUsers(); if(currentUser)showApp();
+</script>
+</body>
+</html>
