@@ -38,7 +38,12 @@ button:active{transform:scale(.98)}
 .item:first-of-type{border-top:0}
 .item-name{font-size:19px;font-weight:800}
 .meta{color:var(--muted);font-size:13px;margin-top:4px}
-.note{color:#e0e0e0;font-size:14px;margin-top:5px}
+.note{
+  color:#fff;
+  font-size:18px;
+  font-weight:800;
+  margin-top:6px;
+}
 .state{min-width:116px;text-align:center;border-radius:14px;padding:11px 10px;font-weight:900}
 .state.ok{background:var(--green)}.state.need{background:var(--yellow)}.state.urgent{background:var(--red)}
 .action-row{display:none;grid-column:1/-1;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
@@ -687,8 +692,7 @@ const newNeed = needArr.filter(x => !lockedIds.has(x.itemId));
       sectionArr.forEach(x=>{
         const line=document.createElement("div");
         line.className="problem-line";
-        line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.categories} • ${x.changedBy||""} ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
-
+    line.innerHTML=`<div><b>$line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.changedBy||""} • ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
         const right=document.createElement("div");
         right.className="order-actions";
 
