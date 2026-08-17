@@ -700,7 +700,7 @@ const newNeed = needArr.filter(x => !lockedIds.has(x.itemId));
       sectionArr.forEach(x=>{
         const line=document.createElement("div");
         line.className="problem-line";
-    line.innerHTML=`<div><b>$line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.changedBy||""} • ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
+    line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.changedBy||""} • ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
         const right=document.createElement("div");
         right.className="order-actions";
 
