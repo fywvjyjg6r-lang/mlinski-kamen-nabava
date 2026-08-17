@@ -209,6 +209,9 @@ let v3CategoriesData = null;
 let notArrived = {};
 
 function isAdmin(){ return admins.includes(currentUser); }
+  function canSeeAnalytics(){
+  return ["Teo","Anamarija","Marica"].includes(currentUser);
+}
 function slugify(text){
   return String(text).toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -448,14 +451,15 @@ tb.appendChild(savedOrdersBtn);
   wasteBtn.textContent="📉 Otpis";
   wasteBtn.onclick=()=>setView("waste");
   tb.appendChild(wasteBtn);
-
+if(canSeeAnalytics()){
+  const analyticsBtn=document.createElement("button");
+  analyticsBtn.className=currentView==="analytics"?"primary":"mutedBtn";
+  analyticsBtn.textContent="📊 Statistika";
+  analyticsBtn.onclick=()=>setView("analytics");
+  tb.appendChild(analyticsBtn);
+}
   if(isAdmin()){
-    const analyticsBtn=document.createElement("button");
-    analyticsBtn.className=currentView==="analytics"?"primary":"mutedBtn";
-    analyticsBtn.textContent="📊 Statistika";
-    analyticsBtn.onclick=()=>setView("analytics");
-    tb.appendChild(analyticsBtn);
-
+  
     const historyBtn=document.createElement("button");
     historyBtn.className=currentView==="history"?"primary":"mutedBtn";
     historyBtn.textContent="📜 Povijest";
@@ -589,13 +593,6 @@ function renderOrder(){
 clearBox.className="problem-card";
 clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Dobavljac se pamti po zadnjem odabiru.</div>`;
 
-const clearBtn=document.createElement("button");
-clearBtn.className="danger";
-clearBtn.textContent="🗑️ OBRIŠI CIJELU NARUDŽBU";
-clearBtn.style.marginTop="10px";
-clearBtn.onclick=clearOrder;
-
-clearBox.appendChild(clearBtn);
 wrap.appendChild(clearBox);
   const orderSearch=document.createElement("input");
   orderSearch.className="search";
