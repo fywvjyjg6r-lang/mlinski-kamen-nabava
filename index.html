@@ -657,7 +657,7 @@ function renderOrder(){
 
     const allArrived=document.createElement("button");
     allArrived.className="green";
-    allArrived.textContent="SVE STIGLO";
+    allArrived.textContent="VRATI STIGLO";
     allArrived.onclick=()=>markSupplierArrived(sup,arr);
 
     btns.append(copy,allArrived);
@@ -705,11 +705,33 @@ function renderOrder(){
         arrived.className="green";
         arrived.textContent="Vrati na stanje";
         arrived.onclick=()=>setItemState("order",x.itemId,"ok");
+        const missingLabel=document.createElement("label");
+missingLabel.style.display="flex";
+missingLabel.style.alignItems="center";
+missingLabel.style.gap="6px";
+missingLabel.style.padding="9px 10px";
+missingLabel.style.borderRadius="10px";
+missingLabel.style.background="#3a2020";
+missingLabel.style.fontSize="13px";
+missingLabel.style.fontWeight="800";
 
-       if(x.statusLabel === "TREBA"){
-  right.append(select, urgentBtn, arrived);
+const missingCheck=document.createElement("input");
+missingCheck.type="checkbox";
+missingCheck.checked=!!notArrived[x.itemId];
+
+missingCheck.onchange=()=>{
+  notArrived[x.itemId]=missingCheck.checked;
+};
+
+missingLabel.append(
+  missingCheck,
+  document.createTextNode("NIJE STIGLO")
+);
+
+      if(x.statusLabel === "TREBA"){
+  right.append(select, urgentBtn, missingLabel, arrived);
 }else{
-  right.append(select, needBtn, arrived);
+  right.append(select, needBtn, missingLabel, arrived);
 }
         line.appendChild(right);
         card.appendChild(line);
@@ -738,12 +760,37 @@ function renderSavedOrders(){
 }
 function markSupplierArrived(supplierName, arr){
   if(!arr.length) return;
-  if(!confirm(`Jeste li sigurni da je stigla cijela narudzba od ${supplierName}?`)) return;
+
+  const missing = arr.filter(x => notArrived[x.itemId]);
+
+  let poruka = `Zavrsiti narudzbu od ${supplierName}?`;
+
+  if(missing.length){
+    poruka += `\n\nNIJE STIGLO (${missing.length}):\n`;
+    poruka += missing.map(x => "- " + x.itemName).join("\n");
+    poruka += `\n\nOvi artikli ostat ce u narudzbi.`;
+  }else{
+    poruka += `\n\nSve ce se vratiti na IMA.`;
+  }
+
+  if(!confirm(poruka)) return;
 
   arr.forEach(x=>{
+
+    // Ako NIJE STIGLO, ostavi ga tocno kako jest
+    if(notArrived[x.itemId]){
+      delete notArrived[x.itemId];
+      return;
+    }
+
     const oldStatus=state[x.itemId]?.status||"ok";
     const oldNote=state[x.itemId]?.note||"";
-    const lastSupplier = state[x.itemId]?.lastSupplier || state[x.itemId]?.supplier || "Nedodijeljeno";
+
+    const lastSupplier =
+      state[x.itemId]?.lastSupplier ||
+      state[x.itemId]?.supplier ||
+      "Nedodijeljeno";
+
     state[x.itemId]={
       status:"ok",
       note:"",
@@ -752,6 +799,23 @@ function markSupplierArrived(supplierName, arr){
       supplier:"Nedodijeljeno",
       lastSupplier:lastSupplier
     };
+
+    pushHistory({
+      time:Date.now(),
+      user:currentUser,
+      categoryId:"arrived",
+      itemId:x.itemId,
+      itemName:x.itemName,
+      oldStatus,
+      newStatus:"ok",
+      oldNote,
+      note:"Stiglo - " + supplierName
+    });
+  });
+
+  set(stateRef,state);
+  renderAll();
+}
     pushHistory({time:Date.now(),user:currentUser,categoryId:"arrived",itemId:x.itemId,itemName:x.itemName,oldStatus,newStatus:"ok",oldNote,note:"Sve stiglo - " + supplierName});
   });
   set(stateRef,state);
