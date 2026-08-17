@@ -1283,12 +1283,7 @@ onValue(historyRef, snapshot=>{
   renderAll();
 });
 onValue(ordersRef, snapshot=>{
-  const data=snapshot.val() || {};
-
-  orders = Object.entries(data)
-    .map(([id,order])=>({id,...order}))
-    .sort((a,b)=>(b.time||0)-(a.time||0));
-
+  savedOrders = snapshot.val() || {};
   renderAll();
 });
 
