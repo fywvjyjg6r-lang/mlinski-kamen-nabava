@@ -190,6 +190,7 @@ let state = {};
 let history = [];
 let waste = [];
 let wasteHistory = [];
+  let orders = [];
 let oldCategoriesLoaded = false;
 let oldStateLoaded = false;
 let oldCategoriesData = null;
@@ -870,7 +871,7 @@ function clearOrder(){
   set(stateRef,state);
   renderAll();
 }
-  async function lockOrder(){
+ async function lockOrder(){
   const {urgent,need}=getProblems();
   const all=[...urgent,...need];
 
@@ -879,7 +880,9 @@ function clearOrder(){
     return;
   }
 
-  if(!confirm(`Zakljucati trenutnu narudzbu?\n\nArtikala: ${all.length}\n\nAktivna narudzba ostaje nepromijenjena.`)){
+  if(!confirm(
+    `Zakljucati trenutnu narudzbu?\n\nArtikala: ${all.length}\n\nAktivna narudzba ostaje nepromijenjena.`
+  )){
     return;
   }
 
@@ -897,7 +900,7 @@ function clearOrder(){
 
   await push(ordersRef, order);
 
-  alert("🔒 Narudzba spremljena.");
+  alert("Narudzba spremljena.");
 }
 function renderHistory(){
   const wrap=document.getElementById("history"); wrap.innerHTML="";
