@@ -125,6 +125,7 @@ button:active{transform:scale(.98)}
 <div id="items"></div>
 </div>
 <div id="orderView" class="hidden"></div>
+  <div id="savedOrdersView" class="hidden"></div>
 <div id="historyView" class="hidden"><div class="history" id="history"></div></div>
 <div id="analyticsView" class="hidden"></div>
 <div id="wasteView" class="hidden"></div>
@@ -163,6 +164,7 @@ const metaRef = ref(db, "nabava_v3/meta");
 const wasteRef = ref(db, "nabava_v3/waste");
 const wasteHistoryRef = ref(db, "nabava_v3/waste_history");
 const suppliersRef = ref(db, "nabava_v3/suppliers");
+  const ordersRef = ref(db, "nabava_v3/orders");
 
 const users = ["Marica","Sanjar","Nina","Ana","Kuhinja","Anamarija","Teo"];
 const admins = ["Teo","Anamarija"];
@@ -197,6 +199,8 @@ let v3ItemsLoaded = false;
 let v3CategoriesLoaded = false;
 let v3ItemsData = null;
 let v3CategoriesData = null;
+  let savedOrders = {};
+let notArrived = {};
 
 function isAdmin(){ return admins.includes(currentUser); }
 function slugify(text){
@@ -376,6 +380,7 @@ window.setView=function(view){
   currentView=view;
   document.getElementById("itemsView").classList.toggle("hidden",view!=="items");
   document.getElementById("orderView").classList.toggle("hidden",view!=="order");
+  document.getElementById("savedOrdersView").classList.toggle("hidden",view!=="savedOrders");
   document.getElementById("historyView").classList.toggle("hidden",view!=="history");
   document.getElementById("analyticsView").classList.toggle("hidden",view!=="analytics");
   document.getElementById("wasteView").classList.toggle("hidden",view!=="waste");
@@ -426,6 +431,11 @@ tb.appendChild(newItemBtn);
   orderBtn.textContent=`📦 Narudzba 🔴${counts.urgent} 🟡${counts.need}`;
   orderBtn.onclick=()=>setView("order");
   tb.appendChild(orderBtn);
+  const savedOrdersBtn=document.createElement("button");
+savedOrdersBtn.className=currentView==="savedOrders"?"primary":"mutedBtn";
+savedOrdersBtn.textContent="🧾 Zadnje narudžbe";
+savedOrdersBtn.onclick=()=>setView("savedOrders");
+tb.appendChild(savedOrdersBtn);
 
   const wasteBtn=document.createElement("button");
   wasteBtn.className=currentView==="waste"?"primary":"mutedBtn";
@@ -712,7 +722,20 @@ function renderOrder(){
     wrap.appendChild(card);
   });
 }
+function renderSavedOrders(){
+  const wrap=document.getElementById("savedOrdersView");
+  wrap.innerHTML="";
 
+  const box=document.createElement("div");
+  box.className="problem-card";
+
+  box.innerHTML=`
+    <div class="problem-title">🧾 Zadnje narudžbe</div>
+    <div class="meta">Ovdje će biti spremljene zadnje 2 narudžbe po dobavljaču.</div>
+  `;
+
+  wrap.appendChild(box);
+}
 function markSupplierArrived(supplierName, arr){
   if(!arr.length) return;
   if(!confirm(`Jeste li sigurni da je stigla cijela narudzba od ${supplierName}?`)) return;
@@ -1104,6 +1127,7 @@ function renderAll(){
   renderTabs();
   if(currentView==="items")renderItems();
   if(currentView==="order")renderOrder();
+  if(currentView==="savedOrders")renderSavedOrders();
   if(currentView==="history")renderHistory();
   if(currentView==="analytics")renderAnalytics();
   if(currentView==="waste")renderWaste();
