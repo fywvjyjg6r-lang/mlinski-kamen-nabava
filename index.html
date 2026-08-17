@@ -928,30 +928,7 @@ function clearOrder(){
   await push(ordersRef, order);
 
   alert(`Narudzba za ${supplierName} je zakljucana.`);
-}
-
-  if(!confirm(
-    `Zakljucati trenutnu narudzbu?\n\nArtikala: ${all.length}\n\nAktivna narudzba ostaje nepromijenjena.`
-  )){
-    return;
-  }
-
-  const order = {
-    time: Date.now(),
-    user: currentUser,
-    items: all.map(x=>({
-      itemId: x.itemId,
-      itemName: x.itemName,
-      status: itemState(x.itemId),
-      note: itemNote(x.itemId),
-      supplier: itemSupplier(x.itemId)
-    }))
-  };
-
-  await push(ordersRef, order);
-
-  alert("Narudzba spremljena.");
-}
+} 
 function renderHistory(){
   const wrap=document.getElementById("history"); wrap.innerHTML="";
   if(!isAdmin()){ wrap.innerHTML=`<div class="meta">Povijest je dostupna samo Teu i Anamariji.</div>`; return; }
