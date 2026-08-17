@@ -432,12 +432,7 @@ tb.appendChild(newItemBtn);
   orderBtn.textContent=`📦 Narudzba 🔴${counts.urgent} 🟡${counts.need}`;
   orderBtn.onclick=()=>setView("order");
   tb.appendChild(orderBtn);
-  const lockBtn=document.createElement("button");
-lockBtn.className="purple";
-lockBtn.textContent="🔒 Zakljucaj";
-lockBtn.onclick=lockOrder;
-tb.appendChild(lockBtn);
-  const savedOrdersBtn=document.createElement("button");
+ const savedOrdersBtn=document.createElement("button");
 savedOrdersBtn.className=currentView==="savedOrders"?"primary":"mutedBtn";
 savedOrdersBtn.textContent="🧾 Zadnje narudžbe";
 savedOrdersBtn.onclick=()=>setView("savedOrders");
@@ -588,9 +583,7 @@ function renderOrder(){
   const clearBox=document.createElement("div");
   clearBox.className="problem-card";
   clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Prvo HITNO, zatim TREBA. Dobavljac se pamti po zadnjem odabiru.</div>`;
-  const clearBtn=document.createElement("button"); clearBtn.className="danger"; clearBtn.textContent="✅ OBRISI CIJELU NARUDZBU"; clearBtn.onclick=clearOrder;
-  clearBox.appendChild(document.createElement("br")); clearBox.appendChild(clearBtn); wrap.appendChild(clearBox);
-
+ wrap.appendChild(clearBox);
   const orderSearch=document.createElement("input");
   orderSearch.className="search";
   orderSearch.id="orderSearchInput";
@@ -643,7 +636,21 @@ function renderOrder(){
 
     const urgentArr = arr.filter(x=>x.statusLabel==="HITNO").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr"));
     const needArr = arr.filter(x=>x.statusLabel==="TREBA").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr"));
+const supplierOrders = Object.values(savedOrders || {})
+  .filter(o => o && o.supplier === sup)
+  .sort((a,b)=>(b.time||0)-(a.time||0));
 
+const lastLockedOrder = supplierOrders[0] || null;
+
+const lockedIds = new Set(
+  (lastLockedOrder?.items || []).map(i => i.itemId)
+);
+
+const lockedUrgent = urgentArr.filter(x => lockedIds.has(x.itemId));
+const lockedNeed = needArr.filter(x => lockedIds.has(x.itemId));
+
+const newUrgent = urgentArr.filter(x => !lockedIds.has(x.itemId));
+const newNeed = needArr.filter(x => !lockedIds.has(x.itemId));
     const card=document.createElement("div");
     card.className="supplier-card";
 
@@ -744,9 +751,42 @@ missingLabel.append(
       });
     }
 
-    renderSection("🔴 HITNO", urgentArr, "urgent");
-    renderSection("🟡 TREBA", needArr, "need");
+    renderSection("🔴 HITNO", lockedUrgent, "urgent");
+renderSection("🟡 TREBA", lockedNeed, "need");
 
+if(lastLockedOrder){
+  const lockLine=document.createElement("div");
+
+  const vrijeme=new Date(lastLockedOrder.time).toLocaleString("hr-HR",{
+    day:"2-digit",
+    month:"2-digit",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+
+  lockLine.style.margin="14px 0";
+  lockLine.style.padding="10px";
+  lockLine.style.borderBottom="3px solid #777";
+  lockLine.style.textAlign="center";
+  lockLine.style.fontWeight="900";
+
+  lockLine.textContent=
+    `🔒 NARUČENO ${vrijeme} • ${lastLockedOrder.user || ""}`;
+
+  card.appendChild(lockLine);
+}
+
+renderSection("🔴 HITNO", newUrgent, "urgent");
+renderSection("🟡 TREBA", newNeed, "need");
+    
+const lockSupplierBtn=document.createElement("button");
+lockSupplierBtn.className="purple";
+lockSupplierBtn.textContent="🔒 Zakljucaj";
+lockSupplierBtn.style.marginTop="12px";
+lockSupplierBtn.style.width="100%";
+lockSupplierBtn.onclick=()=>lockSupplierOrder(sup,arr);
+
+card.appendChild(lockSupplierBtn);
     wrap.appendChild(card);
   });
 }
@@ -860,14 +900,35 @@ function clearOrder(){
   set(stateRef,state);
   renderAll();
 }
- async function lockOrder(){
-  const {urgent,need}=getProblems();
-  const all=[...urgent,...need];
-
-  if(!all.length){
+ async function lockSupplierOrder(supplierName, arr){
+  if(!arr.length){
     alert("Nema artikala za zakljucati.");
     return;
   }
+
+  if(!confirm(
+    `Zakljucati narudzbu za ${supplierName}?\n\nArtikala: ${arr.length}\n\nAktivna narudzba ostaje otvorena.`
+  )){
+    return;
+  }
+
+  const order = {
+    time: Date.now(),
+    user: currentUser,
+    supplier: supplierName,
+    items: arr.map(x=>({
+      itemId: x.itemId,
+      itemName: x.itemName,
+      status: itemState(x.itemId),
+      note: itemNote(x.itemId),
+      supplier: itemSupplier(x.itemId)
+    }))
+  };
+
+  await push(ordersRef, order);
+
+  alert(`Narudzba za ${supplierName} je zakljucana.`);
+}
 
   if(!confirm(
     `Zakljucati trenutnu narudzbu?\n\nArtikala: ${all.length}\n\nAktivna narudzba ostaje nepromijenjena.`
@@ -1244,7 +1305,15 @@ onValue(historyRef, snapshot=>{
   history=Object.values(data).sort((a,b)=>(b.time||0)-(a.time||0)).slice(0,500);
   renderAll();
 });
+onValue(ordersRef, snapshot=>{
+  const data=snapshot.val() || {};
 
+  orders = Object.entries(data)
+    .map(([id,order])=>({id,...order}))
+    .sort((a,b)=>(b.time||0)-(a.time||0));
+
+  renderAll();
+});
 
 // CISTI RUCNI IMPORT IZ V2 - V3.8 FIX
 window.importV2Manual = async function importV2Manual(){
