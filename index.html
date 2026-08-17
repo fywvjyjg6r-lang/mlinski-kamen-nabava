@@ -431,6 +431,16 @@ tb.appendChild(newItemBtn);
   orderBtn.textContent=`📦 Narudzba 🔴${counts.urgent} 🟡${counts.need}`;
   orderBtn.onclick=()=>setView("order");
   tb.appendChild(orderBtn);
+  const lockBtn=document.createElement("button");
+lockBtn.className="purple";
+lockBtn.textContent="🔒 Zakljucaj";
+lockBtn.onclick=lockOrder;
+tb.appendChild(lockBtn);
+  const lockBtn=document.createElement("button");
+lockBtn.className="purple";
+lockBtn.textContent="🔒 Zakljucaj";
+lockBtn.onclick=lockOrder;
+tb.appendChild(lockBtn);
   const savedOrdersBtn=document.createElement("button");
 savedOrdersBtn.className=currentView==="savedOrders"?"primary":"mutedBtn";
 savedOrdersBtn.textContent="🧾 Zadnje narudžbe";
@@ -859,6 +869,35 @@ function clearOrder(){
   });
   set(stateRef,state);
   renderAll();
+}
+  async function lockOrder(){
+  const {urgent,need}=getProblems();
+  const all=[...urgent,...need];
+
+  if(!all.length){
+    alert("Nema artikala za zakljucati.");
+    return;
+  }
+
+  if(!confirm(`Zakljucati trenutnu narudzbu?\n\nArtikala: ${all.length}\n\nAktivna narudzba ostaje nepromijenjena.`)){
+    return;
+  }
+
+  const order = {
+    time: Date.now(),
+    user: currentUser,
+    items: all.map(x=>({
+      itemId: x.itemId,
+      itemName: x.itemName,
+      status: itemState(x.itemId),
+      note: itemNote(x.itemId),
+      supplier: itemSupplier(x.itemId)
+    }))
+  };
+
+  await push(ordersRef, order);
+
+  alert("🔒 Narudzba spremljena.");
 }
 function renderHistory(){
   const wrap=document.getElementById("history"); wrap.innerHTML="";
