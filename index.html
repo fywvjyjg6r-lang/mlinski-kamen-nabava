@@ -585,10 +585,18 @@ function renderOrder(){
   const {urgent,need}=getProblems();
   let all=[...urgent.map(x=>({...x, statusLabel:"HITNO"})), ...need.map(x=>({...x, statusLabel:"TREBA"}))];
 
-  const clearBox=document.createElement("div");
-  clearBox.className="problem-card";
-  clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Prvo HITNO, zatim TREBA. Dobavljac se pamti po zadnjem odabiru.</div>`;
- wrap.appendChild(clearBox);
+ const clearBox=document.createElement("div");
+clearBox.className="problem-card";
+clearBox.innerHTML=`<div class="problem-title">📦 Narudzba</div><div class="meta">Dobavljac se pamti po zadnjem odabiru.</div>`;
+
+const clearBtn=document.createElement("button");
+clearBtn.className="danger";
+clearBtn.textContent="🗑️ OBRIŠI CIJELU NARUDŽBU";
+clearBtn.style.marginTop="10px";
+clearBtn.onclick=clearOrder;
+
+clearBox.appendChild(clearBtn);
+wrap.appendChild(clearBox);
   const orderSearch=document.createElement("input");
   orderSearch.className="search";
   orderSearch.id="orderSearchInput";
