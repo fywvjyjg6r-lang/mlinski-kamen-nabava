@@ -330,6 +330,10 @@ window.addNewItem = function addNewItem(){
   if(!state[itemId]) state[itemId] = {status:"ok", note:"", changedBy:"", changedAt:0, supplier:"Nedodijeljeno", lastSupplier:"Nedodijeljeno"};
 
   input.value = "";
+document.getElementById("newItemBar")?.classList.add("hidden");
+saveAll();
+set(stateRef, state);
+renderAll();
   saveAll();
   set(stateRef, state);
   renderAll();
