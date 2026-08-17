@@ -437,11 +437,6 @@ lockBtn.className="purple";
 lockBtn.textContent="🔒 Zakljucaj";
 lockBtn.onclick=lockOrder;
 tb.appendChild(lockBtn);
-  const lockBtn=document.createElement("button");
-lockBtn.className="purple";
-lockBtn.textContent="🔒 Zakljucaj";
-lockBtn.onclick=lockOrder;
-tb.appendChild(lockBtn);
   const savedOrdersBtn=document.createElement("button");
 savedOrdersBtn.className=currentView==="savedOrders"?"primary":"mutedBtn";
 savedOrdersBtn.textContent="🧾 Zadnje narudžbe";
@@ -827,12 +822,6 @@ function markSupplierArrived(supplierName, arr){
   set(stateRef,state);
   renderAll();
 }
-    pushHistory({time:Date.now(),user:currentUser,categoryId:"arrived",itemId:x.itemId,itemName:x.itemName,oldStatus,newStatus:"ok",oldNote,note:"Sve stiglo - " + supplierName});
-  });
-  set(stateRef,state);
-  renderAll();
-}
-
 async function copySupplierOrder(supplierName, arr){
   const ordered = [
     ...arr.filter(x=>x.statusLabel==="HITNO").sort((a,b)=>a.itemName.localeCompare(b.itemName,"hr")),
