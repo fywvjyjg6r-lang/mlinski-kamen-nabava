@@ -405,7 +405,11 @@ function renderTopbar(){
   itemsBtn.textContent="📋 Artikli";
   itemsBtn.onclick=()=>setView("items");
   tb.appendChild(itemsBtn);
-
+const newItemBtn=document.createElement("button");
+newItemBtn.className="purple";
+newItemBtn.textContent="➕ Novi artikl";
+newItemBtn.onclick=()=>document.getElementById("newItemInput")?.focus();
+tb.appendChild(newItemBtn);
   const counts=getProblemCounts();
   const orderBtn=document.createElement("button");
   orderBtn.className=currentView==="order"?"yellow":"mutedBtn";
