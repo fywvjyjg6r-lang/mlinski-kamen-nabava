@@ -118,7 +118,7 @@ button:active{transform:scale(.98)}
 <div id="itemsView">
 <input class="search" id="searchInput" placeholder="🔍 Pretrazi artikl..." oninput="renderAll()" />
 <div class="tabs" id="tabs"></div>
-<div class="addbar">
+<div class="addbar hidden" id="newItemBar">
   <input id="newItemInput" placeholder="Dodaj novi artikl..." />
   <button class="primary" onclick="addNewItem()">+ Dodaj</button>
 </div>
@@ -408,7 +408,13 @@ function renderTopbar(){
 const newItemBtn=document.createElement("button");
 newItemBtn.className="purple";
 newItemBtn.textContent="➕ Novi artikl";
-newItemBtn.onclick=()=>document.getElementById("newItemInput")?.focus();
+newItemBtn.onclick=()=>{
+  const bar=document.getElementById("newItemBar");
+  bar.classList.toggle("hidden");
+  if(!bar.classList.contains("hidden")){
+    document.getElementById("newItemInput")?.focus();
+  }
+};
 tb.appendChild(newItemBtn);
   const counts=getProblemCounts();
   const orderBtn=document.createElement("button");
