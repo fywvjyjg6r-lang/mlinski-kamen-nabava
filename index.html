@@ -782,7 +782,7 @@ missingLabel.style.fontWeight="800";
 
 const missingCheck=document.createElement("input");
 missingCheck.type="checkbox";
-missingCheck.checked=!!notArrived[x.itemId];
+missingCheck.checked=!!state[x.itemId]?.notArrived;
 
 missingLabel.append(
   missingCheck,
@@ -817,19 +817,16 @@ missingNoteSave.onclick=()=>{
     note += " ";
   }
 
-  setItemState(
-    "order",
-    x.itemId,
-    itemState(x.itemId),
-    note
-  );
+ saveOrderNote(x.itemId, note);
 };
 
 // Klik na NIJE STIGLO otvara bilješku
 missingCheck.onchange=()=>{
-  notArrived[x.itemId]=missingCheck.checked;
+  const value = missingCheck.checked;
 
-  if(missingCheck.checked){
+  setNotArrived(x.itemId, value);
+
+  if(value){
     missingNoteRow.style.display="flex";
 
     setTimeout(()=>{
@@ -839,7 +836,6 @@ missingCheck.onchange=()=>{
     missingNoteRow.style.display="none";
   }
 };
-
 missingNoteRow.append(
   missingNoteInput,
   missingNoteSave
