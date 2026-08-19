@@ -289,6 +289,27 @@ function migrateIfNeeded(){
 }
 
 function setItemState(categoryId,itemId,newStatus,noteValue=null){
+  function setNotArrived(itemId, value){
+  const current = state[itemId] || {};
+
+  state[itemId] = {
+    ...current,
+    notArrived: value
+  };
+
+  set(stateRef, state);
+}
+  function saveOrderNote(itemId, note){
+  const current = state[itemId] || {};
+
+  state[itemId] = {
+    ...current,
+    note: note
+  };
+
+  set(stateRef, state);
+}
+  
   const oldStatus = state[itemId]?.status || "ok";
   const oldNote = state[itemId]?.note || "";
   const note = noteValue !== null ? noteValue : (newStatus === "ok" ? "" : oldNote);
