@@ -822,9 +822,9 @@ noteToggleBtn.onclick=()=>{
     setTimeout(()=>missingNoteInput.focus(),0);
   }
 };
-// Bilješka za NIJE STIGLO - skrivena dok se ne označi
+// Bilješka je uvijek zatvorena dok korisnik ne klikne gumb "Bilješka"
 const missingNoteRow=document.createElement("div");
-missingNoteRow.style.display=missingCheck.checked ? "flex" : "none";
+missingNoteRow.style.display="none";
 missingNoteRow.style.gap="6px";
 missingNoteRow.style.marginTop="8px";
 missingNoteRow.style.width="100%";
@@ -850,7 +850,10 @@ missingNoteSave.onclick=()=>{
     note += " ";
   }
 
- saveOrderNote(x.itemId, note);
+  saveOrderNote(x.itemId, note);
+
+  // Nakon spremanja zatvori uređivanje bilješke
+  missingNoteRow.style.display="none";
 };
 
 // Klik na NIJE STIGLO otvara bilješku
