@@ -327,20 +327,24 @@ function setItemState(categoryId,itemId,newStatus,noteValue=null){
   const lastSupplier = current.lastSupplier || oldSupplier || "Nedodijeljeno";
   const nextSupplier = newStatus === "ok" ? "Nedodijeljeno" : lastSupplier;
 
-  state[itemId] = {
-    ...current,
-    status:newStatus,
-    note,
-    changedBy:currentUser,
-    changedAt:entryTime,
-    supplier:nextSupplier,
-    lastSupplier:lastSupplier,
+state[itemId] = {
+  ...current,
+  status:newStatus,
+  note,
+  changedBy:currentUser,
+  changedAt:entryTime,
+  supplier:nextSupplier,
+  lastSupplier:lastSupplier,
 
-    // Kad ide na IMA, više nije "nije stiglo".
-    // Kod TREBA/HITNO sačuvaj postojeću vrijednost.
-    notArrived:newStatus === "ok" ? false : !!current.notArrived
-  };
+  // Pamti zadnji put kad je artikl stavljen na TREBA.
+  // IMA / STIGLO ovaj datum ne mijenja.
+  lastNeededAt:
+    newStatus === "need"
+      ? entryTime
+      : (current.lastNeededAt || 0),
 
+  notArrived:newStatus === "ok" ? false : !!current.notArrived
+};
   pushHistory({
     time:entryTime,
     user:currentUser,
@@ -1280,16 +1284,20 @@ async function repeatSavedOrder(order){
       current.lastSupplier ||
       "Nedodijeljeno";
 
-    state[itemId] = {
-      ...current,
-      status:"need",
-      note:item.note || "",
-      changedBy:currentUser,
-      changedAt:now,
-      supplier:supplier,
-      lastSupplier:supplier,
-      notArrived:false
-    };
+   state[itemId] = {
+  ...current,
+  status:"need",
+  note:item.note || "",
+  changedBy:currentUser,
+  changedAt:now,
+  supplier:supplier,
+  lastSupplier:supplier,
+
+  // Ponavljanje stare narudžbe računa se kao nova narudžba.
+  lastNeededAt:now,
+
+  notArrived:false
+};
 
     pushHistory({
       time:now,
@@ -1568,90 +1576,194 @@ function renderSupplierAdminBox(container){
 
 
 function renderAnalytics(){
-  const wrap=document.getElementById("analyticsView"); 
+  function renderAnalytics(){
+  const wrap=document.getElementById("analyticsView");
   if(!wrap) return;
+
   wrap.innerHTML="";
 
-  const allItems = Object.keys(items || {});
-  const needItems = allItems.filter(id=>itemState(id)==="need");
-  const urgentItems = allItems.filter(id=>itemState(id)==="urgent");
-  const okItems = allItems.filter(id=>itemState(id)==="ok");
-
-  const orderByChanged = [...needItems, ...urgentItems].map(id=>({
-    id,
-    name:getItemName(id),
-    status:itemState(id),
-    changedAt:state[id]?.changedAt || 0,
-    changedBy:state[id]?.changedBy || "",
-    supplier:itemSupplier ? itemSupplier(id) : (state[id]?.supplier || "Nedodijeljeno")
-  }));
-
-  const byUser = {};
-  Object.values(history || {}).forEach(h=>{
-    if(!h || !h.user) return;
-    byUser[h.user]=(byUser[h.user]||0)+1;
-  });
-
-  const byItem = {};
-  Object.values(history || {}).forEach(h=>{
-    if(!h || !h.itemId) return;
-    if(h.newStatus==="need" || h.newStatus==="urgent"){
-      byItem[h.itemId]=(byItem[h.itemId]||0)+1;
-    }
-  });
-
-  const topItems = Object.entries(byItem)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,20)
-    .map(([id,count])=>({name:getItemName(id),count}));
-
-  const now = Date.now();
-  const staleAll = allItems.map(id=>{
-    const ts = state[id]?.changedAt || 0;
-    const days = ts ? Math.floor((now-ts)/(1000*60*60*24)) : 999;
-    return {id,name:getItemName(id),days,ts};
-  }).sort((a,b)=>b.days-a.days);
-
-  const stale14 = staleAll.filter(x=>x.days>=14 && x.days<30).slice(0,30);
-  const stale30 = staleAll.filter(x=>x.days>=30).slice(0,30);
-
-  const grid=document.createElement("div");
-  grid.className="analytics-grid";
-
-  function card(title, htmlContent){
-    const c=document.createElement("div");
-    c.className="analytics-card";
-    c.innerHTML=`<h3>${title}</h3>${htmlContent}`;
-    grid.appendChild(c);
+  if(!canSeeAnalytics()){
+    wrap.innerHTML='<div class="meta">Statistika nije dostupna.</div>';
+    return;
   }
 
-  card("📦 Trenutno stanje",
-    `<div class="analytics-line">Ukupno artikala: <b>${allItems.length}</b></div>
-     <div class="analytics-line">IMA: <b>${okItems.length}</b></div>
-     <div class="analytics-line">TREBA: <b>${needItems.length}</b></div>
-     <div class="analytics-line">HITNO: <b>${urgentItems.length}</b></div>`
-  );
+  const allItems=Object.keys(items || {});
+  const now=Date.now();
+  const DAY=1000*60*60*24;
 
-  card("👤 Aktivnost korisnika",
-    Object.entries(byUser).sort((a,b)=>b[1]-a[1]).slice(0,10)
-      .map(([u,c])=>`<div class="analytics-line">${u}: <b>${c}</b></div>`).join("") || '<div class="analytics-line">Nema podataka.</div>'
-  );
+  // Za nove zapise koristimo lastNeededAt.
+  // Za stare artikle, dok se jednom ponovno ne stave na TREBA,
+  // pokušamo pronaći zadnji TREBA/HITNO događaj u povijesti.
+  function getLastNeededAt(itemId){
 
-  card("🔥 Najcesce narucivano",
-    topItems.map(x=>`<div class="analytics-line">${x.name}: <b>${x.count}</b></div>`).join("") || '<div class="analytics-line">Nema podataka.</div>'
-  );
+    const direct=state[itemId]?.lastNeededAt || 0;
 
-  card("🟡 Nije dirano 14-29 dana",
-    stale14.map(x=>`<div class="analytics-line">${x.name}: <b>${x.days} dana</b></div>`).join("") || '<div class="analytics-line">Nema takvih artikala.</div>'
-  );
+    if(direct){
+      return direct;
+    }
 
-  card("🔴 Nije dirano 30+ dana",
-    stale30.map(x=>`<div class="analytics-line">${x.name}: <b>${x.days===999?"nikad":x.days+" dana"}</b></div>`).join("") || '<div class="analytics-line">Nema takvih artikala.</div>'
-  );
+    const lastHistory=(history || [])
+      .filter(h=>
+        h &&
+        h.itemId===itemId &&
+        (h.newStatus==="need" || h.newStatus==="urgent")
+      )
+      .sort((a,b)=>(b.time||0)-(a.time||0))[0];
 
-  wrap.appendChild(grid);
+    return lastHistory?.time || 0;
+  }
+
+  const stats=allItems.map(id=>{
+
+    const lastNeededAt=getLastNeededAt(id);
+
+    const days=lastNeededAt
+      ? Math.floor((now-lastNeededAt)/DAY)
+      : null;
+
+    return {
+      id,
+      name:getItemName(id),
+      lastNeededAt,
+      days,
+      currentStatus:itemState(id),
+      supplier:itemSupplier(id)
+    };
+  });
+
+  // Najduže nenaručeni prvi.
+  stats.sort((a,b)=>{
+
+    if(a.days===null && b.days===null){
+      return a.name.localeCompare(b.name,"hr");
+    }
+
+    if(a.days===null) return -1;
+    if(b.days===null) return 1;
+
+    return b.days-a.days;
+  });
+
+  const last7=stats
+    .filter(x=>x.days!==null && x.days<=7);
+
+  const days8to14=stats
+    .filter(x=>x.days!==null && x.days>=8 && x.days<=14);
+
+  const days15to30=stats
+    .filter(x=>x.days!==null && x.days>=15 && x.days<=30);
+
+  const over30=stats
+    .filter(x=>x.days!==null && x.days>30);
+
+  const never=stats
+    .filter(x=>x.days===null);
+
+  const header=document.createElement("div");
+  header.className="problem-card";
+
+  header.innerHTML=`
+    <div class="problem-title">📊 Kontrola naručivanja</div>
+
+    <div class="meta">
+      Broji koliko je dana prošlo od zadnjeg stavljanja artikla na TREBA.
+      Klik na TREBA ili PONOVI NARUDŽBU resetira brojač.
+      IMA / STIGLO ga ne resetira.
+    </div>
+  `;
+
+  wrap.appendChild(header);
+
+  const summary=document.createElement("div");
+  summary.className="analytics-grid";
+
+  function summaryCard(title,count){
+    const c=document.createElement("div");
+    c.className="analytics-card";
+
+    c.innerHTML=`
+      <h3>${title}</h3>
+      <div style="font-size:32px;font-weight:900">
+        ${count}
+      </div>
+      <div class="meta">artikala</div>
+    `;
+
+    summary.appendChild(c);
+  }
+
+  summaryCard("🟢 Zadnjih 7 dana",last7.length);
+  summaryCard("🟡 8–14 dana",days8to14.length);
+  summaryCard("🟠 15–30 dana",days15to30.length);
+  summaryCard("🔴 30+ dana",over30.length);
+  summaryCard("⚫ Nikad naručeno",never.length);
+
+  wrap.appendChild(summary);
+
+  function renderGroup(title,arr){
+
+    const card=document.createElement("div");
+    card.className="analytics-card";
+    card.style.marginBottom="12px";
+
+    const h=document.createElement("h3");
+    h.textContent=`${title} (${arr.length})`;
+
+    card.appendChild(h);
+
+    if(!arr.length){
+
+      const empty=document.createElement("div");
+      empty.className="analytics-line";
+      empty.textContent="Nema artikala.";
+
+      card.appendChild(empty);
+
+    }else{
+
+      arr.forEach(x=>{
+
+        const line=document.createElement("div");
+        line.className="analytics-line";
+
+        let timeText="Nikad naručeno";
+
+        if(x.lastNeededAt){
+
+          const date=new Date(x.lastNeededAt)
+            .toLocaleDateString("hr-HR");
+
+          timeText=
+            x.days===0
+              ? `danas • ${date}`
+              : `prije ${x.days} dana • ${date}`;
+        }
+
+        line.innerHTML=`
+          <div>
+            <b>${x.name}</b>
+            <div class="meta">
+              ${timeText}
+              • 🚚 ${x.supplier}
+              ${x.currentStatus!=="ok" ? " • 🔴 TRENUTNO TREBA" : ""}
+            </div>
+          </div>
+        `;
+
+        card.appendChild(line);
+      });
+    }
+
+    wrap.appendChild(card);
+  }
+
+  // Kritični artikli prvi.
+  renderGroup("⚫ Nikad naručeno",never);
+  renderGroup("🔴 Nije naručeno 30+ dana",over30);
+  renderGroup("🟠 Nije naručeno 15–30 dana",days15to30);
+  renderGroup("🟡 Nije naručeno 8–14 dana",days8to14);
+  renderGroup("🟢 Naručeno zadnjih 7 dana",last7);
 }
-
 function addWaste(){
   const item = document.getElementById("wasteItem")?.value?.trim() || "";
   const qty = document.getElementById("wasteQty")?.value?.trim() || "";
