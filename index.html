@@ -844,18 +844,7 @@ missingNoteSave.onclick=()=>{
 // Klik na NIJE STIGLO otvara bilješku
 missingCheck.onchange=()=>{
   const value = missingCheck.checked;
-
   setNotArrived(x.itemId, value);
-
-  if(value){
-    missingNoteRow.style.display="flex";
-
-    setTimeout(()=>{
-      missingNoteInput.focus();
-    },0);
-  }else{
-    missingNoteRow.style.display="none";
-  }
 };
 missingNoteRow.append(
   missingNoteInput,
