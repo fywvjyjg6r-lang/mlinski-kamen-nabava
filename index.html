@@ -707,7 +707,45 @@ const newUrgent = urgentArr.filter(x => !isLockedItem(x));
       sectionArr.forEach(x=>{
         const line=document.createElement("div");
         line.className="problem-line";
-    line.innerHTML=`<div><b>${x.itemName}</b><div class="meta">${x.changedBy||""} • ${formatShort(x.changedAt)}</div>${x.note?`<div class="note">📝 ${x.note}</div>`:""}</div>`;
+   const left=document.createElement("div");
+
+left.innerHTML=`
+  <div>
+    <b>${x.itemName}</b>
+    <div class="meta">
+      ${x.changedBy||""} • ${formatShort(x.changedAt)}
+    </div>
+  </div>
+`;
+
+const orderNoteRow=document.createElement("div");
+orderNoteRow.style.display="flex";
+orderNoteRow.style.gap="6px";
+orderNoteRow.style.marginTop="8px";
+orderNoteRow.style.alignItems="center";
+
+const orderNoteInput=document.createElement("input");
+orderNoteInput.className="note-input";
+orderNoteInput.style.flex="1";
+orderNoteInput.placeholder="Bilješka...";
+orderNoteInput.value=x.note || "";
+
+const orderNoteSave=document.createElement("button");
+orderNoteSave.className="primary";
+orderNoteSave.textContent="Spremi";
+
+orderNoteSave.onclick=()=>{
+  saveNote("order", x.itemId, orderNoteInput);
+};
+
+orderNoteRow.append(
+  orderNoteInput,
+  orderNoteSave
+);
+
+left.appendChild(orderNoteRow);
+
+line.appendChild(left);
         const right=document.createElement("div");
         right.className="order-actions";
 
