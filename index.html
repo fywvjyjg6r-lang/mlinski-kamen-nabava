@@ -685,6 +685,9 @@ function isLockedItem(x){
 
   // Ako je artikl opet stavljen na TREBA nakon zaključavanja,
   // to je NOVA potreba i mora ici ispod crte.
+  if(state[x.itemId]?.notArrived){
+  return true;
+}
   return changedAt <= lastLockedOrder.time;
 }
 
@@ -940,7 +943,7 @@ async function markSupplierArrived(supplierName, arr){
   if(!targetArr.length) return;
 
   const missing = targetArr.filter(
-    x => notArrived[x.itemId]
+    x => state[x.itemId]?.notArrived
   );
 
   let poruka = `Vratiti stiglo od ${supplierName}?`;
