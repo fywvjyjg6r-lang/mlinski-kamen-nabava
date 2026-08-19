@@ -749,7 +749,7 @@ line.appendChild(left);
         arrived.className="green";
         arrived.textContent="Vrati na stanje";
         arrived.onclick=()=>setItemState("order",x.itemId,"ok");
-        const missingLabel=document.createElement("label");
+       const missingLabel=document.createElement("label");
 missingLabel.style.display="flex";
 missingLabel.style.alignItems="center";
 missingLabel.style.gap="6px";
@@ -763,6 +763,12 @@ const missingCheck=document.createElement("input");
 missingCheck.type="checkbox";
 missingCheck.checked=!!notArrived[x.itemId];
 
+missingLabel.append(
+  missingCheck,
+  document.createTextNode("NIJE STIGLO")
+);
+
+// Bilješka za NIJE STIGLO - skrivena dok se ne označi
 const missingNoteRow=document.createElement("div");
 missingNoteRow.style.display=missingCheck.checked ? "flex" : "none";
 missingNoteRow.style.gap="6px";
@@ -790,8 +796,6 @@ missingNoteSave.onclick=()=>{
     note += " ";
   }
 
-  missingNoteInput.value=note;
-
   setItemState(
     "order",
     x.itemId,
@@ -800,65 +804,25 @@ missingNoteSave.onclick=()=>{
   );
 };
 
-missingNoteRow.append(
-  missingNoteInput,
-  missingNoteSave
-);
+// Klik na NIJE STIGLO otvara bilješku
+missingCheck.onchange=()=>{
+  notArrived[x.itemId]=missingCheck.checked;
 
   if(missingCheck.checked){
     missingNoteRow.style.display="flex";
-    missingNoteInput.focus();
+
+    setTimeout(()=>{
+      missingNoteInput.focus();
+    },0);
   }else{
     missingNoteRow.style.display="none";
   }
 };
-missingLabel.append(
-  missingCheck,
-  document.createTextNode("NIJE STIGLO")
-);
-      const missingNoteRow=document.createElement("div");
-missingNoteRow.style.display=missingCheck.checked ? "flex" : "none";
-missingNoteRow.style.gap="6px";
-missingNoteRow.style.marginTop="8px";
-missingNoteRow.style.width="100%";
-
-const missingNoteInput=document.createElement("input");
-missingNoteInput.className="note-input";
-missingNoteInput.style.flex="1";
-missingNoteInput.placeholder="Npr. naručeno 80kg, došlo 40kg";
-missingNoteInput.value=x.note || "";
-
-const missingNoteSave=document.createElement("button");
-missingNoteSave.className="primary";
-missingNoteSave.textContent="Spremi";
-
-missingNoteSave.onclick=()=>{
-  let note=missingNoteInput.value.trim();
-
-  if(note && !note.endsWith(",")){
-    note += ",";
-  }
-
-  if(note){
-    note += " ";
-  }
-
-  missingNoteInput.value=note;
-
-  setItemState(
-    "order",
-    x.itemId,
-    itemState(x.itemId),
-    note
-  );
-};
 
 missingNoteRow.append(
   missingNoteInput,
   missingNoteSave
 );
-
-      if(x.statusLabel === "TREBA"){
   right.append(select, urgentBtn, missingLabel, arrived);
 }else{
   right.append(select, needBtn, missingLabel, arrived);
