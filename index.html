@@ -813,40 +813,84 @@ function renderSavedOrders(){
 
   wrap.appendChild(box);
 }
-function markSupplierArrived(supplierName, arr){
+async function markSupplierArrived(supplierName, arr){
   if(!arr.length) return;
 
-  const missing = arr.filter(x => notArrived[x.itemId]);
+  // Zadnja zakljucana narudzba ovog dobavljaca
+  const supplierOrders = Object.entries(savedOrders || {})
+    .map(([id, order]) => ({ id, ...order }))
+    .filter(o => o && o.supplier === supplierName)
+    .sort((a,b)=>(b.time||0)-(a.time||0));
 
-  let poruka = `Zavrsiti narudzbu od ${supplierName}?`;
+  const lastLockedOrder = supplierOrders[0] || null;
+
+  // Ako postoji zakljucana narudzba,
+  // VRATI STIGLO dira SAMO artikle koji su bili u njoj.
+  let targetArr = arr;
+
+  if(lastLockedOrder){
+    const lockedIds = new Set(
+      (lastLockedOrder.items || []).map(i => i.itemId)
+    );
+
+    targetArr = arr.filter(x => lockedIds.has(x.itemId));
+  }
+
+  // Ako od zakljucane narudzbe vise nema aktivnih artikala,
+  // makni staru crtu.
+  if(lastLockedOrder && !targetArr.length){
+    await remove(
+      ref(db, "nabava_v3/orders/" + lastLockedOrder.id)
+    );
+    renderAll();
+    return;
+  }
+
+  if(!targetArr.length) return;
+
+  const missing = targetArr.filter(
+    x => notArrived[x.itemId]
+  );
+
+  let poruka = `Vratiti stiglo od ${supplierName}?`;
 
   if(missing.length){
     poruka += `\n\nNIJE STIGLO (${missing.length}):\n`;
-    poruka += missing.map(x => "- " + x.itemName).join("\n");
-    poruka += `\n\nOvi artikli ostat ce u narudzbi.`;
+    poruka += missing
+      .map(x => "- " + x.itemName)
+      .join("\n");
+
+    poruka += `\n\nOvi artikli ostat ce u zakljucanoj narudzbi.`;
   }else{
-    poruka += `\n\nSve ce se vratiti na IMA.`;
+    poruka += `\n\nSve iz zadnje zakljucane narudzbe vratit ce se na IMA.`;
   }
 
   if(!confirm(poruka)) return;
 
-  arr.forEach(x=>{
+  const missingIds = new Set(
+    missing.map(x => x.itemId)
+  );
 
-    // Ako NIJE STIGLO, ostavi ga tocno kako jest
-    if(notArrived[x.itemId]){
+  targetArr.forEach(x=>{
+
+    // NIJE STIGLO -> ostaje TREBA
+    if(missingIds.has(x.itemId)){
       delete notArrived[x.itemId];
       return;
     }
 
-    const oldStatus=state[x.itemId]?.status||"ok";
-    const oldNote=state[x.itemId]?.note||"";
+    const oldStatus =
+      state[x.itemId]?.status || "ok";
+
+    const oldNote =
+      state[x.itemId]?.note || "";
 
     const lastSupplier =
       state[x.itemId]?.lastSupplier ||
       state[x.itemId]?.supplier ||
       "Nedodijeljeno";
 
-    state[x.itemId]={
+    state[x.itemId] = {
       status:"ok",
       note:"",
       changedBy:currentUser,
@@ -854,6 +898,8 @@ function markSupplierArrived(supplierName, arr){
       supplier:"Nedodijeljeno",
       lastSupplier:lastSupplier
     };
+
+    delete notArrived[x.itemId];
 
     pushHistory({
       time:Date.now(),
@@ -868,7 +914,47 @@ function markSupplierArrived(supplierName, arr){
     });
   });
 
-  set(stateRef,state);
+  await set(stateRef, state);
+
+  // ------------------------------------------------
+  // SREDI ZAKLJUCANU NARUDZBU / CRTU
+  // ------------------------------------------------
+
+  if(lastLockedOrder){
+
+    // U zakljucanoj narudzbi ostavi SAMO
+    // ono sto nije stiglo.
+    const remainingItems =
+      (lastLockedOrder.items || [])
+        .filter(i => missingIds.has(i.itemId));
+
+    if(remainingItems.length){
+
+      const { id, ...orderWithoutId } =
+        lastLockedOrder;
+
+      await set(
+        ref(db, "nabava_v3/orders/" + id),
+        {
+          ...orderWithoutId,
+          items: remainingItems
+        }
+      );
+
+    }else{
+
+      // Sve je stiglo -> makni zakljucanu narudzbu
+      // i time nestaje i crta.
+      await remove(
+        ref(
+          db,
+          "nabava_v3/orders/" +
+          lastLockedOrder.id
+        )
+      );
+    }
+  }
+
   renderAll();
 }
 async function copySupplierOrder(supplierName, arr){
