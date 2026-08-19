@@ -823,12 +823,13 @@ missingNoteRow.append(
   missingNoteInput,
   missingNoteSave
 );
-  right.append(select, urgentBtn, missingLabel, arrived);
+if(x.statusLabel === "TREBA"){
+        right.append(select, urgentBtn, missingLabel, arrived);
 }else{
   right.append(select, needBtn, missingLabel, arrived);
 }
         line.appendChild(right);
-      line.appendChild(missingNoteRow);
+        line.appendChild(missingNoteRow) ;
         card.appendChild(line);
       });
     }
