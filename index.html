@@ -307,25 +307,45 @@ function migrateIfNeeded(){
 
   set(stateRef, state);
 }
-  function setItemState(categoryId,itemId,newStatus,noteValue=null){
-  const oldStatus = state[itemId]?.status || "ok";
-  const oldNote = state[itemId]?.note || "";
+function setItemState(categoryId,itemId,newStatus,noteValue=null){
+  const current = state[itemId] || {};
+
+  const oldStatus = current.status || "ok";
+  const oldNote = current.note || "";
   const note = noteValue !== null ? noteValue : (newStatus === "ok" ? "" : oldNote);
   const entryTime = Date.now();
-  const oldSupplier = state[itemId]?.supplier || "Nedodijeljeno";
-  const lastSupplier = state[itemId]?.lastSupplier || oldSupplier || "Nedodijeljeno";
+
+  const oldSupplier = current.supplier || "Nedodijeljeno";
+  const lastSupplier = current.lastSupplier || oldSupplier || "Nedodijeljeno";
   const nextSupplier = newStatus === "ok" ? "Nedodijeljeno" : lastSupplier;
 
   state[itemId] = {
+    ...current,
     status:newStatus,
     note,
     changedBy:currentUser,
     changedAt:entryTime,
-    supplier: nextSupplier,
-    lastSupplier: lastSupplier
+    supplier:nextSupplier,
+    lastSupplier:lastSupplier,
+
+    // Kad ide na IMA, više nije "nije stiglo".
+    // Kod TREBA/HITNO sačuvaj postojeću vrijednost.
+    notArrived:newStatus === "ok" ? false : !!current.notArrived
   };
-  pushHistory({time:entryTime,user:currentUser,categoryId,itemId,itemName:getItemName(itemId),oldStatus,newStatus,oldNote,note});
-  set(stateRef, state);
+
+  pushHistory({
+    time:entryTime,
+    user:currentUser,
+    categoryId,
+    itemId,
+    itemName:getItemName(itemId),
+    oldStatus,
+    newStatus,
+    oldNote,
+    note
+  });
+
+  set(stateRef,state);
 }
 function saveNote(categoryId,itemId,inputEl){
   const note = inputEl.value.trim();
