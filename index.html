@@ -287,8 +287,6 @@ function migrateIfNeeded(){
   if(!activeCategory && categories.length) activeCategory = categories[0].id;
   renderAll();
 }
-
-function setItemState(categoryId,itemId,newStatus,noteValue=null){
   function setNotArrived(itemId, value){
   const current = state[itemId] || {};
 
@@ -309,7 +307,7 @@ function setItemState(categoryId,itemId,newStatus,noteValue=null){
 
   set(stateRef, state);
 }
-  
+  function setItemState(categoryId,itemId,newStatus,noteValue=null){
   const oldStatus = state[itemId]?.status || "ok";
   const oldNote = state[itemId]?.note || "";
   const note = noteValue !== null ? noteValue : (newStatus === "ok" ? "" : oldNote);
