@@ -656,11 +656,19 @@ const lockedIds = new Set(
   (lastLockedOrder?.items || []).map(i => i.itemId)
 );
 
-const lockedUrgent = urgentArr.filter(x => lockedIds.has(x.itemId));
-const lockedNeed = needArr.filter(x => lockedIds.has(x.itemId));
+function isLockedItem(x){
+  if(!lastLockedOrder) return false;
+  if(!lockedIds.has(x.itemId)) return false;
 
-const newUrgent = urgentArr.filter(x => !lockedIds.has(x.itemId));
-const newNeed = needArr.filter(x => !lockedIds.has(x.itemId));
+  const changedAt = state[x.itemId]?.changedAt || 0;
+
+  // Ako je artikl opet stavljen na TREBA nakon zaključavanja,
+  // to je NOVA potreba i mora ici ispod crte.
+  return changedAt <= lastLockedOrder.time;
+}
+
+const lockedNeed = needArr.filter(isLockedItem);
+const newNeed = needArr.filter(x => !isLockedItem(x));
     const card=document.createElement("div");
     card.className="supplier-card";
 
