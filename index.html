@@ -1186,7 +1186,14 @@ function renderSavedOrders(){
             ${vrijeme} • ${order.user || ""}
           </div>
         `;
+const repeatBtn=document.createElement("button");
+repeatBtn.className="purple";
+repeatBtn.textContent="🔁 PONOVI NARUDŽBU";
+repeatBtn.style.marginTop="10px";
 
+repeatBtn.onclick=()=>repeatSavedOrder(order);
+
+orderBox.appendChild(repeatBtn);
         (order.items || []).forEach(item=>{
           const line=document.createElement("div");
           line.className="problem-line";
@@ -1212,7 +1219,101 @@ function renderSavedOrders(){
      wrap.appendChild(supplierCard);
     });
 }
+async function repeatSavedOrder(order){
+  if(!order || !Array.isArray(order.items) || !order.items.length){
+    alert("Ova narudžba nema artikala.");
+    return;
+  }
 
+  const existingActive = [];
+  const toRepeat = [];
+
+  order.items.forEach(item=>{
+    const itemId = item.itemId;
+
+    if(!itemId || !items[itemId]){
+      return;
+    }
+
+    const currentStatus = itemState(itemId);
+
+    // Ako je artikl već aktivno na TREBA,
+    // nećemo pregaziti postojeću količinu/bilješku.
+    if(currentStatus === "need" || currentStatus === "urgent"){
+      existingActive.push(item.itemName || getItemName(itemId));
+      return;
+    }
+
+    toRepeat.push(item);
+  });
+
+  if(!toRepeat.length){
+    alert(
+      existingActive.length
+        ? "Svi artikli iz ove narudžbe već su aktivno na TREBA."
+        : "Nema artikala koje mogu ponoviti."
+    );
+    return;
+  }
+
+  let poruka =
+    `Ponoviti narudžbu za ${order.supplier || "dobavljača"}?\n\n` +
+    `U aktivnu narudžbu će se dodati: ${toRepeat.length} artikala.`;
+
+  if(existingActive.length){
+    poruka +=
+      `\n\nVeć postoje na TREBA i NEĆU ih mijenjati (${existingActive.length}):\n` +
+      existingActive.map(x=>"- " + x).join("\n");
+  }
+
+  if(!confirm(poruka)) return;
+
+  const now = Date.now();
+
+  toRepeat.forEach(item=>{
+    const itemId = item.itemId;
+    const current = state[itemId] || {};
+
+    const supplier =
+      order.supplier ||
+      item.supplier ||
+      current.lastSupplier ||
+      "Nedodijeljeno";
+
+    state[itemId] = {
+      ...current,
+      status:"need",
+      note:item.note || "",
+      changedBy:currentUser,
+      changedAt:now,
+      supplier:supplier,
+      lastSupplier:supplier,
+      notArrived:false
+    };
+
+    pushHistory({
+      time:now,
+      user:currentUser,
+      categoryId:"repeat_order",
+      itemId:itemId,
+      itemName:item.itemName || getItemName(itemId),
+      oldStatus:current.status || "ok",
+      newStatus:"need",
+      oldNote:current.note || "",
+      note:item.note || ""
+    });
+  });
+
+  await set(stateRef,state);
+
+  alert(
+    `Narudžba za ${order.supplier || "dobavljača"} je prebačena u aktivnu narudžbu.\n\n` +
+    `Dodano: ${toRepeat.length}` +
+    (existingActive.length ? `\nPreskočeno jer već postoji: ${existingActive.length}` : "")
+  );
+
+  setView("order");
+}
 async function markSupplierArrived(supplierName, arr){
   if(!arr.length) return;
   // Zadnja zakljucana narudzba ovog dobavljaca
