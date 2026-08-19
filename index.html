@@ -968,11 +968,9 @@ async function markSupplierArrived(supplierName, arr){
   targetArr.forEach(x=>{
 
     // NIJE STIGLO -> ostaje TREBA
-    if(missingIds.has(x.itemId)){
-      delete notArrived[x.itemId];
-      return;
-    }
-
+  if(missingIds.has(x.itemId)){
+  return;
+}
     const oldStatus =
       state[x.itemId]?.status || "ok";
 
