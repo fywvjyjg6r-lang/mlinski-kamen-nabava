@@ -810,6 +810,18 @@ missingLabel.append(
   document.createTextNode("NIJE STIGLO")
 );
 
+const noteToggleBtn=document.createElement("button");
+noteToggleBtn.className="mutedBtn";
+noteToggleBtn.textContent="📝 Bilješka";
+
+noteToggleBtn.onclick=()=>{
+  const isOpen = missingNoteRow.style.display === "flex";
+  missingNoteRow.style.display = isOpen ? "none" : "flex";
+
+  if(!isOpen){
+    setTimeout(()=>missingNoteInput.focus(),0);
+  }
+};
 // Bilješka za NIJE STIGLO - skrivena dok se ne označi
 const missingNoteRow=document.createElement("div");
 missingNoteRow.style.display=missingCheck.checked ? "flex" : "none";
@@ -851,9 +863,9 @@ missingNoteRow.append(
   missingNoteSave
 );
 if(x.statusLabel === "TREBA"){
-        right.append(select, urgentBtn, missingLabel, arrived);
+  right.append(select, urgentBtn, missingLabel, noteToggleBtn, arrived);
 }else{
-  right.append(select, needBtn, missingLabel, arrived);
+  right.append(select, needBtn, missingLabel, noteToggleBtn, arrived);
 }
         line.appendChild(right);
         line.appendChild(missingNoteRow) ;
