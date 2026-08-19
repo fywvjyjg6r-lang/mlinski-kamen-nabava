@@ -669,6 +669,8 @@ function isLockedItem(x){
 
 const lockedNeed = needArr.filter(isLockedItem);
 const newNeed = needArr.filter(x => !isLockedItem(x));
+    const lockedUrgent = urgentArr.filter(isLockedItem);
+const newUrgent = urgentArr.filter(x => !isLockedItem(x));
     const card=document.createElement("div");
     card.className="supplier-card";
 
