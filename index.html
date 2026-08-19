@@ -1209,11 +1209,12 @@ function renderSavedOrders(){
         supplierCard.appendChild(orderBox);
       });
 
-      wrap.appendChild(supplierCard);
+     wrap.appendChild(supplierCard);
     });
 }
-  if(!arr.length) return;
 
+async function markSupplierArrived(supplierName, arr){
+  if(!arr.length) return;
   // Zadnja zakljucana narudzba ovog dobavljaca
   const supplierOrders = Object.entries(savedOrders || {})
     .map(([id, order]) => ({ id, ...order }))
