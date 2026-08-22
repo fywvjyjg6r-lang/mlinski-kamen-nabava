@@ -776,8 +776,8 @@ function renderOrder(){
 
     // ZADNJA ZAKLJUČANA NARUDŽBA
     const supplierOrders=Object.values(savedOrders || {})
-      .filter(o=>o && o.supplier===sup)
-      .sort((a,b)=>(b.time||0)-(a.time||0));
+  .filter(o=>o && o.supplier===sup && o.closed !== true)
+  .sort((a,b)=>(b.time||0)-(a.time||0));
 
     const lastLockedOrder=supplierOrders[0] || null;
 
@@ -1331,10 +1331,10 @@ async function repeatSavedOrder(order){
 async function markSupplierArrived(supplierName, arr){
   if(!arr.length) return;
   // Zadnja zakljucana narudzba ovog dobavljaca
-  const supplierOrders = Object.entries(savedOrders || {})
-    .map(([id, order]) => ({ id, ...order }))
-    .filter(o => o && o.supplier === supplierName)
-    .sort((a,b)=>(b.time||0)-(a.time||0));
+const supplierOrders = Object.entries(savedOrders || {})
+  .map(([id, order]) => ({ id, ...order }))
+  .filter(o => o && o.supplier === supplierName && o.closed !== true)
+  .sort((a,b)=>(b.time||0)-(a.time||0));
 
   const lastLockedOrder = supplierOrders[0] || null;
 
@@ -1428,31 +1428,35 @@ async function markSupplierArrived(supplierName, arr){
 
   await set(stateRef, state);
 
-  // U staroj zakljucanoj narudzbi ostavi SAMO NIJE STIGLO
-  const remainingItems = (lastLockedOrder.items || [])
-    .filter(i => missingIds.has(i.itemId));
+// Provjeri što iz zaključane narudžbe još NIJE STIGLO.
+// ORIGINALNU narudžbu više NIKAD ne skraćujemo.
+const remainingItems = (lastLockedOrder.items || [])
+  .filter(i => missingIds.has(i.itemId));
 
-  if(remainingItems.length){
+const { id, ...orderWithoutId } = lastLockedOrder;
 
-    const { id, ...orderWithoutId } = lastLockedOrder;
+await set(
+  ref(db, "nabava_v3/orders/" + lastLockedOrder.id),
+  {
+    ...orderWithoutId,
 
-    await set(
-      ref(db, "nabava_v3/orders/" + lastLockedOrder.id),
-      {
-        ...orderWithoutId,
-        items:remainingItems
-      }
-    );
+    // Cijeli originalni items ostaje sačuvan.
+    closed: remainingItems.length === 0,
 
-  }else{
+    remainingItemIds:
+      remainingItems.map(i => i.itemId),
 
-    // Sve je stiglo -> makni staru crtu
-    await remove(
-      ref(db, "nabava_v3/orders/" + lastLockedOrder.id)
-    );
+    closedAt:
+      remainingItems.length === 0
+        ? Date.now()
+        : (orderWithoutId.closedAt || 0),
+
+    closedBy:
+      remainingItems.length === 0
+        ? currentUser
+        : (orderWithoutId.closedBy || "")
   }
-
-  renderAll();
+);
 }
 async function copySupplierOrder(supplierName, arr){
   const ordered = [
