@@ -142,6 +142,11 @@ button:active{transform:scale(.98)}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+  import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGBcGeqMCs-904J4-d1F00oRBik3djxTo",
@@ -156,6 +161,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+  const auth = getAuth(app);
 
 // STARA V2 BAZA SAMO ZA MIGRACIJU
 const oldCategoriesRef = ref(db, "nabava/categories");
@@ -1956,6 +1962,73 @@ function renderAll(){
 }
 
 // FIREBASE LISTENERS
+  function showFirebaseLogin(){
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("login").classList.add("hidden");
+
+  let box=document.getElementById("firebaseLoginBox");
+
+  if(!box){
+    box=document.createElement("div");
+    box.id="firebaseLoginBox";
+    box.className="login";
+
+    box.innerHTML=`
+      <h2>🔐 Prijava uređaja</h2>
+      <div class="meta" style="margin-bottom:12px">
+        Ovu prijavu treba napraviti samo jednom na ovom uređaju.
+      </div>
+
+      <input
+        id="firebaseEmail"
+        type="email"
+        placeholder="Email"
+        style="width:100%;padding:13px;margin-bottom:8px;border-radius:14px;border:1px solid #333;background:#181818;color:white"
+      >
+
+      <input
+        id="firebasePassword"
+        type="password"
+        placeholder="Lozinka"
+        style="width:100%;padding:13px;margin-bottom:10px;border-radius:14px;border:1px solid #333;background:#181818;color:white"
+      >
+
+      <button id="firebaseLoginBtn" class="primary" style="width:100%">
+        PRIJAVI UREĐAJ
+      </button>
+
+      <div id="firebaseLoginError" class="meta" style="margin-top:10px"></div>
+    `;
+
+    document.querySelector(".wrap").prepend(box);
+
+    document.getElementById("firebaseLoginBtn").onclick=async()=>{
+      const email=document.getElementById("firebaseEmail").value.trim();
+      const password=document.getElementById("firebasePassword").value;
+
+      try{
+        await signInWithEmailAndPassword(auth,email,password);
+      }catch(err){
+        document.getElementById("firebaseLoginError").textContent=
+          "Pogrešan email ili lozinka.";
+      }
+    };
+  }
+
+  box.classList.remove("hidden");
+}
+
+onAuthStateChanged(auth,user=>{
+  if(user){
+    document.getElementById("firebaseLoginBox")?.classList.add("hidden");
+    }else{
+      document.getElementById("login").classList.remove("hidden");
+      document.getElementById("app").classList.add("hidden");
+    }
+  }else{
+    showFirebaseLogin();
+  }
+});
 onValue(oldCategoriesRef, snapshot=>{oldCategoriesData=snapshot.val(); oldCategoriesLoaded=true; migrateIfNeeded();});
 onValue(oldStateRef, snapshot=>{oldStateData=snapshot.val(); oldStateLoaded=true; migrateIfNeeded();});
 onValue(itemsRef, snapshot=>{v3ItemsData=snapshot.val(); v3ItemsLoaded=true; items=v3ItemsData||items; migrateIfNeeded(); renderAll();});
